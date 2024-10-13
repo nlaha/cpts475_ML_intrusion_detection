@@ -1,0 +1,8 @@
+**/*.zip
+**/*.rar
+**/*.tsv
+**/*.csv
+**/*.duckdb
+**/pcap/*
+.idea/
+venv/
