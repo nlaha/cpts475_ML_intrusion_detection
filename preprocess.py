@@ -28,10 +28,11 @@ if __name__ == '__main__':
       
             # extract the pcap files for this data subset
             # find the destination directory for the extracted pcap files
-            destination_dir = os.path.join(PCAP_DATA_PATH, data_subset_name, directory)
+            subset_destination_dir = os.path.join(PCAP_DATA_PATH, data_subset_name)
+            destination_dir = os.path.join(subset_destination_dir, directory)
             
             # skip if it already contains files
-            if not (os.path.exists(destination_dir) and len(os.listdir(destination_dir)) > 0):
+            if not os.path.exists(subset_destination_dir):
                 # check if the destination directory exists
                 if not os.path.exists(destination_dir):
                     os.makedirs(destination_dir)
@@ -74,12 +75,13 @@ if __name__ == '__main__':
             else:
                 logger.info(f"Metadata directory already exists for {data_subset_name}/{directory}, skipping metadata extraction")
             
-            # delete the extracted pcap files to save space
-            logger.info("Deleting extracted pcap files")
-            for f in os.listdir(destination_dir):
-                os.remove(os.path.join(destination_dir, f))
-            os.rmdir(destination_dir)
-            logger.info("Finished deleting extracted pcap files")
+            if os.path.exists(destination_dir):
+                # delete the extracted pcap files to save space
+                logger.info("Deleting extracted pcap files")
+                for f in os.listdir(destination_dir):
+                    os.remove(os.path.join(destination_dir, f))
+                os.rmdir(destination_dir)
+                logger.info("Finished deleting extracted pcap files")
             
             logger.info(f"Merging metadata files into {data_subset_name} table")
             

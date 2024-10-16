@@ -87,8 +87,8 @@ def post_process_database(table_name):
     # print the number of rows in the merged table
     sql = f"""
             UPDATE {table_name} SET attack_type = CASE
-                WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN '{ATTACK_TYPE_MAPPING.get(table_name)}'
-                WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN '{ATTACK_TYPE_MAPPING.get(table_name)}'
+                WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
+                WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
                 ELSE 0
             END
         """
