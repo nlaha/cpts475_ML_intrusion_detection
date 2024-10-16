@@ -49,42 +49,6 @@ def post_process_database(table_source):
 
     ATTACKER_IPS_STR = ",".join(map(lambda x: f"'{x}'", ATTACKER_IPS))
 
-    # create column attack_type in table
-    try:
-        # check if attack_type column exists
-        if "attack_type" in con.table(table_name).columns:
-            logger.info("Attack_type column already exists in table")
-        else:
-            logger.info(f"Adding attack_type column to {table_name} table")
-            sql = f"""
-                ALTER TABLE {table_name} ADD COLUMN attack_type INT
-            """
-            con.execute(sql)
-    except Exception as e:
-        logger.error(e)
-
-    # create timestamp column in data_merged table from the frame_time_epoch column
-    try:
-        # check if timestamp column exists
-        if "timestamp" in con.table(table_name).columns:
-            logger.info("Timestamp column already exists in table")
-        else:
-            logger.info(f"Adding timestamp column to {table_name} table")
-            sql = f"""
-                ALTER TABLE {table_name} ADD COLUMN timestamp TIMESTAMP
-            """
-            con.execute(sql)
-
-        # update the timestamp column in data_merged table
-        sql = f"""
-            UPDATE {table_name} SET timestamp = to_timestamp(frame_time_epoch)
-        """
-
-        con.execute(sql)
-
-    except Exception as e:
-        logger.error(e)
-
     logger.info(f"Updating attack_type column in {table_name} table")
     sql = f"""
         CREATE TABLE IF NOT EXISTS {table_name} AS
@@ -97,7 +61,8 @@ def post_process_database(table_source):
                     ELSE 0
                 END
             ) AS attack_type,
-            
+            strftime('%Y-%m-%d %H:%M',to_timestamp(frame_time_epoch)) as date_minutes
+
             AVG(frame_time_delta) as avg_frame_time_delta,
             AVG(frame_len) as avg_frame_len,
             AVG(tcp_hdr_len) as avg_tcp_hdr_len,
@@ -137,7 +102,6 @@ def post_process_database(table_source):
             MIN(frame_len) as min_frame_len,
             MIN(tcp_hdr_len) as min_tcp_hdr_len,
             
-            strftime('%Y-%m-%d %H:%M',timestamp) as date_minutes
             FROM {table_source}
             GROUP_BY date_minutes
         )
