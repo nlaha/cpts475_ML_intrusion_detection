@@ -4,5 +4,7 @@
 **/*.csv
 **/*.duckdb
 **/pcap/*
+**/meta/*
 .idea/
 venv/
+__pycache__/
