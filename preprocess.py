@@ -45,9 +45,9 @@ if __name__ == '__main__':
                 
                 # extract the pcap files
                 # extract the files directly into the destination directory, don't add a pcap subdirectory
-                command = f"{SEVENZIP_PATH} e \"{os.path.join(data_subset, pcap_archive)}\" -y -bsp1 -o{destination_dir} pcap/*"
+                command = f"{SEVENZIP_PATH} e \"{os.path.abspath(os.path.join(data_subset, pcap_archive))}\" -y -bsp1 -o\"{os.path.abspath(destination_dir)}\" pcap/*"
                 # run the subprocess and print the output live
-                process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 for line in process.stdout:
                     logger.info(line.decode('utf-8').strip())
                 for line in process.stderr:
