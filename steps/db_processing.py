@@ -47,14 +47,17 @@ def post_process_database(table_name):
 
     ATTACKER_IPS_STR = ",".join(map(lambda x: f"'{x}'", ATTACKER_IPS))
 
-    logger.info(f"Adding attack_type column to {table_name} table")
-
     # create column attack_type in table
     try:
-        sql = f"""
-            ALTER TABLE IF {table_name} ADD COLUMN attack_type INT
-        """
-        con.execute(sql)
+        # check if attack_type column exists
+        if "attack_type" in con.table(table_name).columns:
+            logger.info("Attack_type column already exists in table")
+        else:
+            logger.info(f"Adding attack_type column to {table_name} table")
+            sql = f"""
+                ALTER TABLE {table_name} ADD COLUMN attack_type INT
+            """
+            con.execute(sql)
     except Exception as e:
         logger.error(e)
 
@@ -64,6 +67,7 @@ def post_process_database(table_name):
         if "timestamp" in con.table(table_name).columns:
             logger.info("Timestamp column already exists in table")
         else:
+            logger.info(f"Adding timestamp column to {table_name} table")
             sql = f"""
                 ALTER TABLE {table_name} ADD COLUMN timestamp TIMESTAMP
             """
@@ -79,6 +83,7 @@ def post_process_database(table_name):
     except Exception as e:
         logger.error(e)
 
+    logger.info(f"Updating attack_type column in {table_name} table")
     # print the number of rows in the merged table
     sql = f"""
             UPDATE {table_name} SET attack_type = CASE

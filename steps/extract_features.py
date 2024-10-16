@@ -7,7 +7,7 @@ from multiprocessing import Pool
 # initialize pretty logging
 from loguru import logger
 
-from config import TSHARK_PATH, META_DATA_PATH, TSHARK_FIELDS, NUM_CORES
+from config import TSHARK_PATH, META_DATA_PATH, TSHARK_FIELDS, NUM_CORES, PCAP_DATA_PATH
 
 # function to extract packet metadata from pcap files using tshark
 def extract_features(file):
@@ -37,9 +37,12 @@ def extract_features(file):
         # set first row of result with new column names
         result = first_row + '\n' + result[len(first_row)+1:]
         
+        # output path is similar to the input path but with the META_DATA_PATH instead of PCAP_DATA_PATH
+        dirname = os.path.dirname(file).replace(PCAP_DATA_PATH, META_DATA_PATH)
         filename = os.path.basename(file) + '.tsv'
+        path = os.path.join(dirname, filename)
         # save as tsv in output directory
-        with open(os.path.join(META_DATA_PATH, filename), 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             f.write(result)
     
         # print result

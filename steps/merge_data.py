@@ -20,8 +20,14 @@ def merge_tsv_files(meta_data_path, table_name):
     tsv_files = [f for f in os.listdir(meta_data_path) if f.endswith('.tsv')]
     tsv_files = [os.path.join(meta_data_path, f) for f in tsv_files]
 
-    # merge the TSV files into a single table
-    logger.info("Merging TSV files into a single table")
+    logger.info(f"Found {len(tsv_files)} TSV files in {meta_data_path}")
+
+    # check if we already have a table with the same name
+    # if so, drop the table
+    try:
+        con.execute(f"DROP TABLE {table_name}")
+    except Exception as e:
+        logger.warning(e)
 
     # create a table in the duckdb database
     # with the same schema as the TSV files

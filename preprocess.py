@@ -31,43 +31,55 @@ if __name__ == '__main__':
             destination_dir = os.path.join(PCAP_DATA_PATH, data_subset_name, directory)
             
             # skip if it already contains files
-            if os.path.exists(destination_dir) and len(os.listdir(destination_dir)) > 0:
-                logger.info(f"Skipping extraction for {data_subset} as it already contains files")
-                continue
-            
-            # check if the destination directory exists
-            if not os.path.exists(destination_dir):
-                os.makedirs(destination_dir)
+            if not (os.path.exists(destination_dir) and len(os.listdir(destination_dir)) > 0):
+                # check if the destination directory exists
+                if not os.path.exists(destination_dir):
+                    os.makedirs(destination_dir)
+                    
+                # the pcap files are either pcap.zip or pcap.rar
+                # use SEVENZIP_PATH to extract the files
+                pcap_archive = list(filter(lambda x: 'pcap' in x, os.listdir(data_subset)))[0]
                 
-            # the pcap files are either pcap.zip or pcap.rar
-            # use SEVENZIP_PATH to extract the files
-            pcap_archive = list(filter(lambda x: 'pcap' in x, os.listdir(data_subset)))[0]
-            
-            logger.info(f"Extracting {pcap_archive} to {destination_dir}")
-            
-            # extract the pcap files
-            # extract the files directly into the destination directory, don't add a pcap subdirectory
-            command = f"{SEVENZIP_PATH} e \"{os.path.join(data_subset, pcap_archive)}\" -y -bsp1 -o{destination_dir} pcap/*"
-            # run the subprocess and print the output live
-            process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            for line in process.stdout:
-                logger.info(line.decode('utf-8').strip())
-            for line in process.stderr:
-                logger.error(line.decode('utf-8').strip())
-            process.wait()
-            
-            # check if the extraction was successful
-            if process.returncode == 0:
-                logger.info(f"Successfully extracted pcap files for {data_subset_name}/{directory}")
+                logger.info(f"Extracting {pcap_archive} to {destination_dir}")
+                
+                # extract the pcap files
+                # extract the files directly into the destination directory, don't add a pcap subdirectory
+                command = f"{SEVENZIP_PATH} e \"{os.path.join(data_subset, pcap_archive)}\" -y -bsp1 -o{destination_dir} pcap/*"
+                # run the subprocess and print the output live
+                process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                for line in process.stdout:
+                    logger.info(line.decode('utf-8').strip())
+                for line in process.stderr:
+                    logger.error(line.decode('utf-8').strip())
+                process.wait()
+                
+                # check if the extraction was successful
+                if process.returncode == 0:
+                    logger.info(f"Successfully extracted pcap files for {data_subset_name}/{directory}")
+                else:
+                    logger.error(f"Error extracting pcap files for {data_subset_name}/{directory}")
+
             else:
-                logger.error(f"Error extracting pcap files for {data_subset_name}/{directory}")
-                            
-            # run the metadata extraction script
-            logger.info("Running metadata extraction")
+                logger.info(f"Extracted pcap files already exist for {data_subset_name}/{directory}")
+                       
+            # check if the metadata files already exist
+            if not os.path.exists(os.path.join(META_DATA_PATH, data_subset_name, directory)):
+
+                # run the metadata extraction script
+                logger.info("Running metadata extraction")
+                
+                get_meta_from_pcap(destination_dir, os.path.join(META_DATA_PATH, data_subset_name, directory))
+                
+                logger.info("Finished metadata extraction")
+            else:
+                logger.info(f"Metadata directory already exists for {data_subset_name}/{directory}, skipping metadata extraction")
             
-            get_meta_from_pcap(destination_dir, os.path.join(META_DATA_PATH, data_subset_name, directory))
-            
-            logger.info("Finished metadata extraction")
+            # delete the extracted pcap files to save space
+            logger.info("Deleting extracted pcap files")
+            for f in os.listdir(destination_dir):
+                os.remove(os.path.join(destination_dir, f))
+            os.rmdir(destination_dir)
+            logger.info("Finished deleting extracted pcap files")
             
             logger.info(f"Merging metadata files into {data_subset_name} table")
             
