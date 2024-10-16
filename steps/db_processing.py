@@ -65,11 +65,11 @@ def post_process_database(table_source):
             
             MAX (
                 CASE
-                    WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN 1
-                    WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN 0
+                    WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN 0
+                    WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN 1
                     ELSE -1
-                END AS attack_direction,
-            )
+                END
+            ) AS packet_direction,
             
             strftime(to_timestamp(frame_time_epoch), '%Y-%m-%d %H:%M') as date_minutes,
             
