@@ -49,20 +49,30 @@ def post_process_database(table_source):
 
     ATTACKER_IPS_STR = ",".join(map(lambda x: f"'{x}'", ATTACKER_IPS))
 
-    logger.info(f"Updating attack_type column in {table_name} table")
+    logger.info(f"Aggregating data to {table_name} table")
     sql = f"""
         CREATE TABLE IF NOT EXISTS {table_name} AS
         (
             SELECT
+            
             MAX (
                 CASE
-                    WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
-                    WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
+                    WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_source)}
+                    WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_source)}
                     ELSE 0
                 END
             ) AS attack_type,
-            strftime('%Y-%m-%d %H:%M',to_timestamp(frame_time_epoch)) as date_minutes
-
+            
+            MAX (
+                CASE
+                    WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN 1
+                    WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN 0
+                    ELSE -1
+                END AS attack_direction,
+            )
+            
+            strftime(to_timestamp(frame_time_epoch), '%Y-%m-%d %H:%M') as date_minutes,
+            
             AVG(frame_time_delta) as avg_frame_time_delta,
             AVG(frame_len) as avg_frame_len,
             AVG(tcp_hdr_len) as avg_tcp_hdr_len,
@@ -100,10 +110,10 @@ def post_process_database(table_source):
             
             MIN(frame_time_delta) as min_frame_time_delta,
             MIN(frame_len) as min_frame_len,
-            MIN(tcp_hdr_len) as min_tcp_hdr_len,
+            MIN(tcp_hdr_len) as min_tcp_hdr_len
             
             FROM {table_source}
-            GROUP_BY date_minutes
+            GROUP BY date_minutes
         )
         """
 

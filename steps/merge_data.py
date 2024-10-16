@@ -56,11 +56,13 @@ def merge_tsv_files(meta_data_path, table_name):
     con.execute(sql)
 
     # copy each TSV file into the duckdb database
+    idx = 0
     for tsv_file in tsv_files:
-        logger.info(f"Copying {tsv_file} into the duckdb database")
+        logger.info(f"Copying {tsv_file} into the duckdb database {idx + 1}/{len(tsv_files)}")
         # timestamp and attack_type columns will be added later
         sql = f"INSERT INTO {table_name} SELECT * FROM read_csv_auto('{tsv_file}', delim='\t', header=true)"
         con.execute(sql)
+        idx += 1
 
     # close the duckdb connection
     con.close()
