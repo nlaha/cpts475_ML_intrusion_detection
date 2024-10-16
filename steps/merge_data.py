@@ -50,7 +50,7 @@ def merge_tsv_files(meta_data_path, table_name):
             tcp_flags_push BOOLEAN,
             tcp_flags_reset BOOLEAN,
             tcp_flags_syn BOOLEAN,
-            tcp_flags_fin BOOLEAN
+            tcp_flags_fin BOOLEAN,
         )
     """
     con.execute(sql)
@@ -58,6 +58,7 @@ def merge_tsv_files(meta_data_path, table_name):
     # copy each TSV file into the duckdb database
     for tsv_file in tsv_files:
         logger.info(f"Copying {tsv_file} into the duckdb database")
+        # timestamp and attack_type columns will be added later
         sql = f"INSERT INTO {table_name} SELECT * FROM read_csv_auto('{tsv_file}', delim='\t', header=true)"
         con.execute(sql)
 

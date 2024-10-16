@@ -3,11 +3,13 @@ from loguru import logger
 
 from config import DUCKDB_PATH, ATTACK_TYPE_MAPPING
 
-def post_process_database(table_name):
+def post_process_database(table_source):
     """
     Post-process the database table (label data)
     Add the attack_type column to the table
     """
+    
+    table_name = f"{table_source}_agg"
     
     # global duckdb connection
     con = duckdb.connect(DUCKDB_PATH)
@@ -84,13 +86,67 @@ def post_process_database(table_name):
         logger.error(e)
 
     logger.info(f"Updating attack_type column in {table_name} table")
-    # print the number of rows in the merged table
     sql = f"""
-            UPDATE {table_name} SET attack_type = CASE
-                WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
-                WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
-                ELSE 0
-            END
+        CREATE TABLE IF NOT EXISTS {table_name} AS
+        (
+            SELECT
+            MAX (
+                CASE
+                    WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
+                    WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
+                    ELSE 0
+                END
+            ) AS attack_type,
+            
+            AVG(frame_time_delta) as avg_frame_time_delta,
+            AVG(frame_len) as avg_frame_len,
+            AVG(tcp_hdr_len) as avg_tcp_hdr_len,
+            
+            stddev_samp(frame_time_delta) as stddev_frame_time_delta,
+            stddev_samp(frame_len) as stddev_frame_len,
+            stddev_samp(tcp_hdr_len) as stddev_tcp_hdr_len,
+            
+            mode(frame_time_delta) as mode_frame_time_delta,
+            mode(frame_len) as mode_frame_len,
+            mode(tcp_hdr_len) as mode_tcp_hdr_len,
+            
+            entropy(frame_time_delta) as entropy_frame_time_delta,
+            entropy(frame_len) as entropy_frame_len,
+            entropy(tcp_hdr_len) as entropy_tcp_hdr_len,
+
+            median(frame_time_delta) as median_frame_time_delta,
+            median(frame_len) as median_frame_len,
+            median(tcp_hdr_len) as median_tcp_hdr_len,
+            
+            COUNT(tcp_flags_syn) as count_tcp_flags_syn,
+            COUNT(tcp_flags_fin) as count_tcp_flags_fin,
+            COUNT(tcp_flags_reset) as count_tcp_flags_reset,
+            COUNT(tcp_flags_push) as count_tcp_flags_push,
+            COUNT(tcp_flags_ack) as count_tcp_flags_ack,
+            COUNT(tcp_flags_urg) as count_tcp_flags_urg,
+            COUNT(tcp_flags_ece) as count_tcp_flags_ece,
+            COUNT(tcp_flags_cwr) as count_tcp_flags_cwr,
+            COUNT(tcp_flags_ae) as count_tcp_flags_ae,
+            COUNT(tcp_flags_res) as count_tcp_flags_res,
+            
+            MAX(frame_time_delta) as max_frame_time_delta,
+            MAX(frame_len) as max_frame_len,
+            MAX(tcp_hdr_len) as max_tcp_hdr_len,
+            
+            MIN(frame_time_delta) as min_frame_time_delta,
+            MIN(frame_len) as min_frame_len,
+            MIN(tcp_hdr_len) as min_tcp_hdr_len,
+            
+            strftime('%Y-%m-%d %H:%M',timestamp) as date_minutes
+            FROM {table_source}
+            GROUP_BY date_minutes
+        )
         """
 
+    con.execute(sql)
+    
+    # drop the old table
+    sql = f"""
+        DROP TABLE {table_source}
+    """
     con.execute(sql)

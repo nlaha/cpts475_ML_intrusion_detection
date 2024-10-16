@@ -57,28 +57,28 @@ ATTACK_TYPE_MAPPING = {
 }
 
 TSHARK_FIELDS = [
-    "frame.time_epoch",  # timestamp of frame in seconds since epoch
-    "frame.time_delta",  # time delta from previous frame
-    "frame.protocols",  # protocols in frame
-    "frame.len",  # frame length
-    "frame.encap_type",  # frame encapsulation type
-    "ip.src",  # source ip address
-    "ip.dst",  # destination ip address
-    "eth.type",  # ethernet type (IPv4, IPv6, ARP, etc.)
-    "tcp.len",  # tcp length
-    "tcp.seq",  # tcp sequence number
-    "tcp.ack",  # tcp acknowledgement number
-    "tcp.hdr_len",  # tcp header length
-    "tcp.flags",  # tcp flags
-    "tcp.urgent_pointer",  # tcp urgent pointer
-    "tcp.flags.res",  # tcp reserved flag
-    "tcp.flags.ae",  # tcp accurate ecn flag
-    "tcp.flags.cwr",  # tcp congestion window reduced flag
-    "tcp.flags.ece",  # tcp ecn-echo flag
-    "tcp.flags.urg",  # tcp urgent flag
-    "tcp.flags.ack",  # tcp acknowledgement flag
-    "tcp.flags.push",  # tcp push flag
-    "tcp.flags.reset",  # tcp reset flag
-    "tcp.flags.syn",  # tcp syn flag
-    "tcp.flags.fin",  # tcp fin flag
+    "frame.time_epoch",     # timestamp of frame in seconds since epoch
+    "frame.time_delta",     # time delta from previous frame
+    "frame.protocols",      # protocols in frame
+    "frame.len",            # frame length
+    "frame.encap_type",     # frame encapsulation type
+    "ip.src",               # source ip address
+    "ip.dst",               # destination ip address
+    "eth.type",             # ethernet type (IPv4, IPv6, ARP, etc.)
+    "tcp.len",              # tcp length
+    "tcp.seq",              # tcp sequence number
+    "tcp.ack",              # tcp acknowledgement number
+    "tcp.hdr_len",          # tcp header length
+    "tcp.flags",            # tcp flags
+    "tcp.urgent_pointer",   # tcp urgent pointer
+    "tcp.flags.res",        # tcp reserved flag
+    "tcp.flags.ae",         # tcp accurate ecn flag
+    "tcp.flags.cwr",        # tcp congestion window reduced flag
+    "tcp.flags.ece",        # tcp ecn-echo flag
+    "tcp.flags.urg",        # tcp urgent flag
+    "tcp.flags.ack",        # tcp acknowledgement flag
+    "tcp.flags.push",       # tcp push flag
+    "tcp.flags.reset",      # tcp reset flag
+    "tcp.flags.syn",        # tcp syn flag
+    "tcp.flags.fin",        # tcp fin flag
 ]
