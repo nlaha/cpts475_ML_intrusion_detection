@@ -2,12 +2,9 @@ import joblib
 from loguru import logger
 import xgboost as xgb
 from sklearn.model_selection import (
-    RepeatedStratifiedKFold,
-    cross_val_score,
     train_test_split,
 )
 from sklearn.metrics import (
-    accuracy_score,
     classification_report,
     f1_score,
     precision_score,
