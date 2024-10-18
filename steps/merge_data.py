@@ -2,7 +2,7 @@ import os
 import duckdb
 from loguru import logger
 
-from config import DUCKDB_PATH
+from config import DUCKDB_PATH, TSHARK_DB_COLS
 
 def merge_tsv_files(meta_data_path, table_name):
     """
@@ -12,6 +12,13 @@ def merge_tsv_files(meta_data_path, table_name):
     
     # global duckdb connection
     con = duckdb.connect(DUCKDB_PATH)
+
+    try:
+        con.execute(f"SELECT * FROM {table_name} LIMIT 1")
+        logger.info(f"Table {table_name} already exists, skipping merging")
+        return
+    except:
+        pass
 
     # read all TSV files in the output path
     # import them into a single table
@@ -27,30 +34,7 @@ def merge_tsv_files(meta_data_path, table_name):
     logger.info("Creating a table in the duckdb database")
     sql = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
-            frame_time_epoch DOUBLE,
-            frame_time_delta DOUBLE,
-            frame_protocols VARCHAR,
-            frame_len BIGINT,
-            frame_encap_type INT,
-            ip_src VARCHAR,
-            ip_dst VARCHAR,
-            eth_type VARCHAR,
-            tcp_len BIGINT,
-            tcp_seq BIGINT,
-            tcp_ack BIGINT,
-            tcp_hdr_len INT,
-            tcp_flags INT,
-            tcp_urgent_pointer INT,
-            tcp_flags_res BOOLEAN,
-            tcp_flags_ae BOOLEAN,
-            tcp_flags_cwr BOOLEAN,
-            tcp_flags_ece BOOLEAN,
-            tcp_flags_urg BOOLEAN,
-            tcp_flags_ack BOOLEAN,
-            tcp_flags_push BOOLEAN,
-            tcp_flags_reset BOOLEAN,
-            tcp_flags_syn BOOLEAN,
-            tcp_flags_fin BOOLEAN,
+            {TSHARK_DB_COLS}
         )
     """
     con.execute(sql)
