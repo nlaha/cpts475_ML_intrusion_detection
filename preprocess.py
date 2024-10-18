@@ -30,12 +30,12 @@ if __name__ == '__main__':
             # find the destination directory for the extracted pcap files
             subset_destination_dir = os.path.join(PCAP_DATA_PATH, data_subset_name)
             destination_dir = os.path.join(subset_destination_dir, directory)
+            meta_dir = os.path.join(META_DATA_PATH, data_subset_name, directory)
             
             # skip if it already contains files
-            if not os.path.exists(subset_destination_dir):
+            if not os.path.exists(meta_dir):
                 # check if the destination directory exists
-                if not os.path.exists(destination_dir):
-                    os.makedirs(destination_dir)
+                os.makedirs(destination_dir)
                     
                 # the pcap files are either pcap.zip or pcap.rar
                 # use SEVENZIP_PATH to extract the files
@@ -83,19 +83,22 @@ if __name__ == '__main__':
                 os.rmdir(destination_dir)
                 logger.info("Finished deleting extracted pcap files")
             
-            logger.info(f"Merging metadata files into {data_subset_name} table")
+            # table
+            table_name = f"{data_subset_name}_{directory}".replace("-", "_")
+            
+            logger.info(f"Merging metadata files into {table_name} table")
             
             # merge the metadata files into a single duckdb table
-            merge_tsv_files(os.path.join(META_DATA_PATH, data_subset_name, directory), data_subset_name)
+            merge_tsv_files(os.path.join(META_DATA_PATH, data_subset_name, directory), table_name)
             
-            logger.info(f"Finished merging metadata files into {data_subset_name} table")
+            logger.info(f"Finished merging metadata files into {table_name} table")
             
             # labeling & processing database table
-            logger.info(f"Adding is_attack column to {data_subset_name} table")
+            logger.info(f"Aggregating {table_name} table")
             
-            post_process_database(data_subset_name)
+            post_process_database(table_name, directory)
             
-            logger.info(f"Finished adding is_attack column to {data_subset_name} table")
+            logger.info(f"Finished aggregating {table_name} table")
             
     logger.info("Finished processing all data subsets")
     

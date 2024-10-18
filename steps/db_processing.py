@@ -1,96 +1,128 @@
 import duckdb
 from loguru import logger
 
-from config import DUCKDB_PATH, ATTACK_TYPE_MAPPING
+from config import DUCKDB_PATH, ATTACK_TYPE_MAPPING, ATTACK_TIMES, ATTACKER_IPS
 
-def post_process_database(table_name):
+def post_process_database(table_source, attack_date):
     """
     Post-process the database table (label data)
     Add the attack_type column to the table
     """
+
+    logger.info(f"Using attack_date = {attack_date}")
+    
+    table_name = f"{table_source}_agg"
     
     # global duckdb connection
     con = duckdb.connect(DUCKDB_PATH)
-
-    AGG_COLUMNS = [
-        "eth_type",
-        "ip_src",
-        "ip_dst",
-    ]
-
-    ATTACKER_IPS = [
-        "18.221.219.4",
-        "172.31.70.4",
-        "172.31.70.6",
-        "13.58.98.64",
-        "172.31.70.46",
-        "18.219.211.138",
-        "18.217.165.70",
-        "172.31.70.23",
-        "13.59.126.31",
-        "172.31.70.16",
-        "18.219.193.20",
-        "18.218.115.60",
-        "18.219.9.1",
-        "18.219.32.43",
-        "18.218.55.126",
-        "52.14.136.135",
-        "18.219.5.43",
-        "18.216.200.189",
-        "18.218.229.235",
-        "18.218.11.51",
-        "18.216.24.42",
-        "18.218.115.60",
-        "13.58.225.34",
-        "18.219.211.138",
-    ]
-
-    ATTACKER_IPS_STR = ",".join(map(lambda x: f"'{x}'", ATTACKER_IPS))
-
-    # create column attack_type in table
+    
+    # if we already have the table, return
     try:
-        # check if attack_type column exists
-        if "attack_type" in con.table(table_name).columns:
-            logger.info("Attack_type column already exists in table")
-        else:
-            logger.info(f"Adding attack_type column to {table_name} table")
-            sql = f"""
-                ALTER TABLE {table_name} ADD COLUMN attack_type INT
-            """
-            con.execute(sql)
-    except Exception as e:
-        logger.error(e)
+        con.execute(f"SELECT * FROM {table_name} LIMIT 1")
+        logger.info(f"Table {table_name} already exists, skipping post-processing")
+        return
+    except:
+        pass
+    
+    # filter attack_times by attack_date
+    attack_times_filtered = list(filter(lambda x: attack_date == x[0], ATTACK_TIMES))
+    
+    logger.info(f"Using {', '.join(map(lambda x: x[3], attack_times_filtered))} as attack types")
 
-    # create timestamp column in data_merged table from the frame_time_epoch column
-    try:
-        # check if timestamp column exists
-        if "timestamp" in con.table(table_name).columns:
-            logger.info("Timestamp column already exists in table")
-        else:
-            logger.info(f"Adding timestamp column to {table_name} table")
-            sql = f"""
-                ALTER TABLE {table_name} ADD COLUMN timestamp TIMESTAMP
-            """
-            con.execute(sql)
-
-        # update the timestamp column in data_merged table
-        sql = f"""
-            UPDATE {table_name} SET timestamp = to_timestamp(frame_time_epoch)
+    # build the WHEN clause for the attack_type column
+    then_clause = ""
+    for time in attack_times_filtered:
+        start_time = time[1]
+        end_time = time[2]
+        attack_name = time[3]
+        
+        start_minutes = int(start_time.split(":")[0]) * 60 + int(start_time.split(":")[1])
+        end_minutes = int(end_time.split(":")[0]) * 60 + int(end_time.split(":")[1])
+        
+        then_clause += f"""
+            WHEN minutes
+                BETWEEN {start_minutes} AND {end_minutes} THEN {ATTACK_TYPE_MAPPING[attack_name]}
         """
+        
+    logger.info(f"Using then_clause: {then_clause}")
 
-        con.execute(sql)
+    ATTACKER_IPS_REGEX = "|".join(map(lambda x: f"({x})", ATTACKER_IPS))
 
-    except Exception as e:
-        logger.error(e)
-
-    logger.info(f"Updating attack_type column in {table_name} table")
-    # print the number of rows in the merged table
+    logger.info(f"Aggregating data to {table_name} table")
     sql = f"""
-            UPDATE {table_name} SET attack_type = CASE
-                WHEN ip_src IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
-                WHEN ip_dst IN ({ATTACKER_IPS_STR}) THEN {ATTACK_TYPE_MAPPING.get(table_name)}
-                ELSE 0
-            END
+        CREATE TABLE IF NOT EXISTS {table_name} AS
+        (
+            SELECT
+            
+            MAX (
+                CASE
+                    WHEN regexp_matches(ip_src, '{ATTACKER_IPS_REGEX}') THEN 1
+                    WHEN regexp_matches(ip_dst, '{ATTACKER_IPS_REGEX}') THEN 1
+                    ELSE 0
+                END
+            ) AS has_attack_ip,
+            
+            MAX (
+                CASE
+                    {then_clause}
+                    ELSE {ATTACK_TYPE_MAPPING['Benign']}
+                END
+            ) AS attack_type,
+            
+            date_minutes,
+            
+            avg(frame_time_delta) as avg_frame_time_delta,
+            avg(frame_len) as avg_frame_len,
+            avg(tcp_hdr_len) as avg_tcp_hdr_len,
+            avg(tcp_time_relative) as avg_tcp_time_relative,
+            
+            stddev_samp(frame_time_delta) as stddev_frame_time_delta,
+            stddev_samp(frame_len) as stddev_frame_len,
+            stddev_samp(tcp_hdr_len) as stddev_tcp_hdr_len,
+            stddev_samp(tcp_time_relative) as stddev_tcp_time_relative,
+            
+            mode(frame_time_delta) as mode_frame_time_delta,
+            mode(frame_len) as mode_frame_len,
+            mode(tcp_hdr_len) as mode_tcp_hdr_len,
+            mode(tcp_time_relative) as mode_tcp_time_relative,
+            
+            entropy(frame_time_delta) as entropy_frame_time_delta,
+            entropy(frame_len) as entropy_frame_len,
+            entropy(tcp_hdr_len) as entropy_tcp_hdr_len,
+            entropy(tcp_time_relative) as entropy_tcp_time_relative,
+
+            median(frame_time_delta) as median_frame_time_delta,
+            median(frame_len) as median_frame_len,
+            median(tcp_hdr_len) as median_tcp_hdr_len,
+            median(tcp_time_relative) as median_tcp_time_relative,
+            
+            count(tcp_flags_syn = true) as count_tcp_flags_syn,
+            count(tcp_flags_fin = true) as count_tcp_flags_fin,
+            count(tcp_flags_reset = true) as count_tcp_flags_reset,
+            count(tcp_flags_push = true) as count_tcp_flags_push,
+            count(tcp_flags_ack = true) as count_tcp_flags_ack,
+            count(tcp_flags_urg = true) as count_tcp_flags_urg,
+            count(tcp_flags_ece = true) as count_tcp_flags_ece,
+            count(tcp_flags_cwr = true) as count_tcp_flags_cwr,
+            count(tcp_flags_ae = true) as count_tcp_flags_ae,
+            count(tcp_flags_res = true) as count_tcp_flags_res,
+            
+            count(contains(frame_protocols, 'tcp')) as count_proto_tcp,
+            count(contains(frame_protocols, 'udp')) as count_proto_udp,
+            count(contains(frame_protocols, 'tls')) as count_proto_tls,
+            count(contains(frame_protocols, 'http')) as count_proto_http,
+            count(contains(frame_protocols, 'smb')) as count_proto_smb,
+            count(contains(frame_protocols, 'rdp')) as count_proto_rdp
+            
+            FROM (
+                SELECT 
+                    *,
+                    strftime(to_timestamp(frame_time_epoch), '%Y-%m-%d %H:%M') as date_minutes,
+                    hour(to_timestamp(frame_time_epoch)) * 60 + minute(to_timestamp(frame_time_epoch)) as minutes
+                FROM {table_source}
+            )
+            GROUP BY date_minutes
+        )
         """
 
     con.execute(sql)
