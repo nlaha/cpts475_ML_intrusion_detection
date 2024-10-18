@@ -119,14 +119,21 @@ xgb_bo = BayesianOptimization(run_with_params, params)
 
 results = xgb_bo.maximize(init_points=2, n_iter=20)
 
+logger.info("Best parameters found: ", xgb_bo.max['params'])
+logger.info("Training the model with the best parameters...")
+
 best_params = xgb_bo.max['params']
 best_params['max_depth']= int(best_params['max_depth'])
 best_params['n_estimators']= int(best_params['n_estimators'])
 
 model_best = xgb.train(best_params, D_train, num_boost_round=10)
 
+logger.info("Model trained successfully!")
+
 # since we now have the best model, we can test it
 test_model(model_best, X_test)
+
+logger.info("Saving the model...")
 
 # save model to ./models directory
 joblib.dump(model_best, "models/xgboost_rf.joblib")
