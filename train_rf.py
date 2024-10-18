@@ -18,10 +18,12 @@ import numpy as np
 import duckdb
 import pandas as pd
 import os
-import cupy as cp
 
 USE_GPU = False
 THREADS = 24
+
+if USE_GPU:
+    import cupy as cp
 
 con = duckdb.connect(database="data/pcap_metadata.duckdb", read_only=True)
 
