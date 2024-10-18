@@ -16,16 +16,34 @@ from sklearn.metrics import (
 from bayes_opt import BayesianOptimization
 import numpy as np
 import duckdb
+import pandas as pd
+import os
 import cupy as cp
 
 USE_GPU = False
+THREADS = 24
 
 con = duckdb.connect(database="data/pcap_metadata.duckdb", read_only=True)
 
-logger.info("Loading data from the duckdb database...")
+# check if we have the dataset in parquet format
+# if not, load it from the duckdb database
+if not os.path.exists("training_data.parquet"):
+    dataset = pd.read_parquet("training_data.parquet")
+    logger.info("Loaded data from parquet file")
+else:
+    logger.info("Loading data from the duckdb database...")
+    # Load data
+    dataset = con.execute("SELECT * FROM merged_aggregated").df()
+    # cache data to parquet so we don't have to load it again
+    dataset.to_parquet("training_data.parquet")
+    logger.info("Saved data to parquet file for next time")
 
-# Load data
-dataset = con.execute("SELECT * FROM merged_aggregated").df()
+# print the first few rows of the dataset
+logger.info(dataset.head())
+
+# print the count of each attack type
+logger.info(dataset["is_attack"].value_counts())
+
 Y = dataset["is_attack"]
 X = dataset.drop(["date_minutes", "attack_type", "is_attack", "has_attack_ip"], axis=1)
 
@@ -47,7 +65,7 @@ D_test = xgb.DMatrix(X_test, label=Y_test)
 
 logger.info("Training the XGBoost classifier...")
 
-def run_with_params(max_depth, gamma, learning_rate, n_estimators, subsample):
+def run_with_params(max_depth, gamma, learning_rate, n_estimators, subsample, colsample_bynode):
     """
         Run the XGBoost classifier with the given parameters
     """
@@ -58,7 +76,9 @@ def run_with_params(max_depth, gamma, learning_rate, n_estimators, subsample):
         'subsample': subsample,
         'tree_method': 'hist',
         'num_parallel_tree': int(n_estimators),
+        'colsample_bynode': colsample_bynode,
         'device': 'cuda' if USE_GPU else 'cpu',
+        'nthread': THREADS,
     }
 
     # perform cross-validation
@@ -91,6 +111,7 @@ params = {
     "learning_rate": (0.01, 1),
     "subsample": (0.5, 1),
     "n_estimators": (50, 1000),
+    "colsample_bynode": (0.5, 1),
 }
 
 # Tune the hyperparameters
