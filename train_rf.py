@@ -117,7 +117,7 @@ params = {
 # i.e. find the best settings for the training algorithm
 xgb_bo = BayesianOptimization(run_with_params, params)
 
-results = xgb_bo.maximize(init_points=200, n_iter=20)
+results = xgb_bo.maximize(init_points=2, n_iter=20)
 
 best_params = xgb_bo.max['params']
 best_params['max_depth']= int(best_params['max_depth'])
