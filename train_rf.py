@@ -22,8 +22,6 @@ THREADS = 24
 if USE_GPU:
     import cupy as cp
 
-con = duckdb.connect(database="data/pcap_metadata.duckdb", read_only=True)
-
 # check if we have the dataset in parquet format
 # if not, load it from the duckdb database
 if not os.path.exists("training_data.parquet"):
@@ -32,7 +30,9 @@ if not os.path.exists("training_data.parquet"):
 else:
     logger.info("Loading data from the duckdb database...")
     # Load data
+    con = duckdb.connect(database="data/pcap_metadata.duckdb", read_only=True)
     dataset = con.execute("SELECT * FROM merged_aggregated").df()
+    con.close()
     # cache data to parquet so we don't have to load it again
     dataset.to_parquet("training_data.parquet")
     logger.info("Saved data to parquet file for next time")
