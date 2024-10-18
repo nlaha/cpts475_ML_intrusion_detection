@@ -24,7 +24,7 @@ if USE_GPU:
 
 # check if we have the dataset in parquet format
 # if not, load it from the duckdb database
-if not os.path.exists("training_data.parquet"):
+if os.path.exists("training_data.parquet"):
     dataset = pd.read_parquet("training_data.parquet")
     logger.info("Loaded data from parquet file")
 else:
