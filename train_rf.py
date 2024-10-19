@@ -10,9 +10,8 @@ import numpy as np
 import duckdb
 import pandas as pd
 import os
-from dmatrix2np import dmatrix_to_numpy
 
-THREADS = 16
+THREADS = 35
 MODEL_NAME = "xgboost_rf"
 USE_SOURCE_DATA = True
 
@@ -101,7 +100,7 @@ else:
         score_std = cv['test-error-std'].iloc[-1]
         
         # Print the accuracy of the classifier
-        logger.info(f"CV Error: {1 - score_mean} (±{score_std})")
+        logger.info(f"CV Error: {score_mean} (±{score_std})")
 
         return score_mean
 
