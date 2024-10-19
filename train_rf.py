@@ -101,7 +101,10 @@ else:
         
         # Print the accuracy of the classifier
         logger.info(f"CV Error: {score_mean} (±{score_std})")
-
+        # Print the parameters used
+        logger.info(f"Parameters: {params}")
+                
+        # Return the mean error score
         return score_mean
 
     params = {
@@ -115,7 +118,7 @@ else:
 
     # Tune the hyperparameters
     # i.e. find the best settings for the training algorithm
-    xgb_bo = BayesianOptimization(run_with_params, params)
+    xgb_bo = BayesianOptimization(run_with_params, params, verbose=0)
 
     xgb_bo.maximize(init_points=5, n_iter=25)
 
