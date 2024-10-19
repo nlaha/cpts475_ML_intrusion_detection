@@ -14,14 +14,15 @@ import os
 THREADS = 35
 MODEL_NAME = "xgboost_rf"
 USE_SOURCE_DATA = True
+SOURCE_DATA_DIR = "/home/nlaha/storage"
 
 if USE_SOURCE_DATA:
     MODEL_NAME += "_source_data"
     # load all csvs from the preprocessed data directory into a single dataframe
     logger.info("Loading preprocessed data...")
     dataset = pd.concat(
-        [pd.read_csv(f"source_data/Processed Traffic Data for ML Algorithms/{file}") 
-         for file in os.listdir("source_data/Processed Traffic Data for ML Algorithms")]
+        [pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}", header=0) 
+         for file in os.listdir(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms")], ignore_index=True
     )
     logger.info("Loaded preprocessed data")
 else:
@@ -47,7 +48,91 @@ if USE_SOURCE_DATA:
     target = "Label"
     # map target to binary 0 or 1 depending of if it's 'Benign' or something else
     dataset[target] = dataset[target].map(lambda x: 0 if x == "Benign" else 1)
-    dropped_x_cols = ["Label", "Timestamp", "Dst Port"]
+    # set datatype of all used columns
+    dataset = dataset.astype({
+        "Protocol": "int32",
+        "Flow Duration": "int32",
+        "Tot Fwd Pkts": "int32",
+        "Tot Bwd Pkts": "int32",
+        "TotLen Fwd Pkts": "int32",
+        "TotLen Bwd Pkts": "int32",
+        "Fwd Pkt Len Max": "int32",
+        "Fwd Pkt Len Min": "int32",
+        "Fwd Pkt Len Mean": "float64",
+        "Fwd Pkt Len Std": "float64",
+        "Bwd Pkt Len Max": "int32",
+        "Bwd Pkt Len Min": "int32",
+        "Bwd Pkt Len Mean": "float64",
+        "Bwd Pkt Len Std": "float64",
+        "Flow Byts/s": "float64",
+        "Flow Pkts/s": "float64",
+        "Flow IAT Mean": "float64",
+        "Flow IAT Std": "float64",
+        "Flow IAT Max": "int32",
+        "Flow IAT Min": "int32",
+        "Fwd IAT Tot": "int32",
+        "Fwd IAT Mean": "float64",
+        "Fwd IAT Std": "float64",
+        "Fwd IAT Max": "int32",
+        "Fwd IAT Min": "int32",
+        "Bwd IAT Tot": "int32",
+        "Bwd IAT Mean": "float64",
+        "Bwd IAT Std": "float64",
+        "Bwd IAT Max": "int32",
+        "Bwd IAT Min": "int32",
+        "Fwd PSH Flags": "int32",
+        "Bwd PSH Flags": "int32",
+        "Fwd URG Flags": "int32",
+        "Bwd URG Flags": "int32",
+        "Fwd Header Len": "int32",
+        "Bwd Header Len": "int32",
+        "Fwd Pkts/s": "float64",
+        "Bwd Pkts/s": "float64",
+        "Pkt Len Min": "int32",
+        "Pkt Len Max": "int32",
+        "Pkt Len Mean": "float64",
+        "Pkt Len Std": "float64",
+        "Pkt Len Var": "float64",
+        "FIN Flag Cnt": "int32",
+        "SYN Flag Cnt": "int32",
+        "RST Flag Cnt": "int32",
+        "PSH Flag Cnt": "int32",
+        "ACK Flag Cnt": "int32",
+        "URG Flag Cnt": "int32",
+        "CWE Flag Count": "int32",
+        "ECE Flag Cnt": "int32",
+        "Down/Up Ratio": "int32",
+        "Pkt Size Avg": "float64",
+        "Fwd Seg Size Avg": "float64",
+        "Bwd Seg Size Avg": "float64",
+        "Fwd Byts/b Avg": "int32",
+        "Fwd Pkts/b Avg": "int32",
+        "Fwd Blk Rate Avg": "int32",
+        "Bwd Byts/b Avg": "int32",
+        "Bwd Pkts/b Avg": "int32",
+        "Bwd Blk Rate Avg": "int32",
+        "Subflow Fwd Pkts": "int32",
+        "Subflow Fwd Byts": "int32",
+        "Subflow Bwd Pkts": "int32",
+        "Subflow Bwd Byts": "int32",
+        "Init Fwd Win Byts": "int32",
+        "Init Bwd Win Byts": "int32",
+        "Fwd Act Data Pkts": "int32",
+        "Fwd Seg Size Min": "int32",
+        "Active Mean": "float64",
+        "Active Std": "float64",
+        "Active Max": "int32",
+        "Active Min": "int32",
+        "Idle Mean": "float64",
+        "Idle Std": "float64",
+        "Idle Max": "int32",
+        "Idle Min": "int32",
+    })
+    
+    # make label boolean
+    dataset["Label"] = dataset["Label"].map(lambda x: 0 if x == "Benign" else 1)
+        
+    dropped_x_cols = ["Label", "Timestamp", "Dst Port", "Dst IP", "Src Port", "Src IP", "Flow ID"]
 
 # print the first few rows of the dataset
 logger.info(dataset.head())
@@ -61,6 +146,10 @@ X = dataset.drop(dropped_x_cols, axis=1)
 # print columns we're using for X and Y
 logger.info(f"X: {X.columns}")
 logger.info(f"Y: {Y.name}")
+
+# print the types of each column
+logger.info(X.dtypes)
+logger.info(Y.dtypes)
 
 logger.info("Splitting the data into train, test sets...")
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
