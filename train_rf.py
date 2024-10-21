@@ -33,7 +33,7 @@ if USE_SOURCE_DATA:
                 df = pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}", low_memory=False)
                 # remove headers that were duplicated during concatenation
                 # in this case, we just check for the existence of a cell with the value "Protocol"
-                df = df[df.drop(["Timestamp", "Label"], axis=1).apply(lambda x: x.str.contains("Protocol").any(), axis=1) == False]
+                df = df[df.drop(["Timestamp", "Label"], axis=1).apply(lambda x: x.astype(str).str.contains("Protocol").any(), axis=1) == False]
                 logger.info("Concatenating data with existing dataset...")
                 dataset = pd.concat([dataset, df], ignore_index=True)
                 logger.info(dataset.head())
