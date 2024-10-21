@@ -20,10 +20,28 @@ if USE_SOURCE_DATA:
     MODEL_NAME += "_source_data"
     # load all csvs from the preprocessed data directory into a single dataframe
     logger.info("Loading preprocessed data...")
-    dataset = pd.concat(
-        [pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}", header=0) 
-         for file in os.listdir(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms")], ignore_index=True
-    )
+    
+    if os.path.exists("training_data_source.parquet"):
+        dataset = pd.read_parquet("training_data.parquet")
+        logger.info("Loaded data from parquet file")
+    else:
+        # remove all duplicate header rows from each csv
+        dataset = pd.DataFrame()
+        if not os.path.exists(f"{SOURCE_DATA_DIR}/clean/Processed Traffic Data for ML Algorithms"):
+            for file in os.listdir(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms"):
+                logger.info(f"Removing duplicate headers from {file}...")
+                df = pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}")
+                # remove headers that were duplicated during concatenation
+                # i.e. check if a row has a nonnumeric value in any column
+                # if it does, it's a header row
+                df = df[df.apply(lambda x: x.str.isnumeric().all(), axis=1)]
+                logger.info("Concatenating data with existing dataset...")
+                dataset = pd.concat([dataset, df], ignore_index=True)
+                logger.info(dataset.head())
+
+        # save to parquet so we don't have to load it again
+        dataset.to_parquet("training_data_source.parquet")
+        
     logger.info("Loaded preprocessed data")
 else:
     # check if we have the dataset in parquet format
@@ -48,86 +66,6 @@ if USE_SOURCE_DATA:
     target = "Label"
     # map target to binary 0 or 1 depending of if it's 'Benign' or something else
     dataset[target] = dataset[target].map(lambda x: 0 if x == "Benign" else 1)
-    # set datatype of all used columns
-    dataset = dataset.astype({
-        "Protocol": "int32",
-        "Flow Duration": "int32",
-        "Tot Fwd Pkts": "int32",
-        "Tot Bwd Pkts": "int32",
-        "TotLen Fwd Pkts": "int32",
-        "TotLen Bwd Pkts": "int32",
-        "Fwd Pkt Len Max": "int32",
-        "Fwd Pkt Len Min": "int32",
-        "Fwd Pkt Len Mean": "float64",
-        "Fwd Pkt Len Std": "float64",
-        "Bwd Pkt Len Max": "int32",
-        "Bwd Pkt Len Min": "int32",
-        "Bwd Pkt Len Mean": "float64",
-        "Bwd Pkt Len Std": "float64",
-        "Flow Byts/s": "float64",
-        "Flow Pkts/s": "float64",
-        "Flow IAT Mean": "float64",
-        "Flow IAT Std": "float64",
-        "Flow IAT Max": "int32",
-        "Flow IAT Min": "int32",
-        "Fwd IAT Tot": "int32",
-        "Fwd IAT Mean": "float64",
-        "Fwd IAT Std": "float64",
-        "Fwd IAT Max": "int32",
-        "Fwd IAT Min": "int32",
-        "Bwd IAT Tot": "int32",
-        "Bwd IAT Mean": "float64",
-        "Bwd IAT Std": "float64",
-        "Bwd IAT Max": "int32",
-        "Bwd IAT Min": "int32",
-        "Fwd PSH Flags": "int32",
-        "Bwd PSH Flags": "int32",
-        "Fwd URG Flags": "int32",
-        "Bwd URG Flags": "int32",
-        "Fwd Header Len": "int32",
-        "Bwd Header Len": "int32",
-        "Fwd Pkts/s": "float64",
-        "Bwd Pkts/s": "float64",
-        "Pkt Len Min": "int32",
-        "Pkt Len Max": "int32",
-        "Pkt Len Mean": "float64",
-        "Pkt Len Std": "float64",
-        "Pkt Len Var": "float64",
-        "FIN Flag Cnt": "int32",
-        "SYN Flag Cnt": "int32",
-        "RST Flag Cnt": "int32",
-        "PSH Flag Cnt": "int32",
-        "ACK Flag Cnt": "int32",
-        "URG Flag Cnt": "int32",
-        "CWE Flag Count": "int32",
-        "ECE Flag Cnt": "int32",
-        "Down/Up Ratio": "int32",
-        "Pkt Size Avg": "float64",
-        "Fwd Seg Size Avg": "float64",
-        "Bwd Seg Size Avg": "float64",
-        "Fwd Byts/b Avg": "int32",
-        "Fwd Pkts/b Avg": "int32",
-        "Fwd Blk Rate Avg": "int32",
-        "Bwd Byts/b Avg": "int32",
-        "Bwd Pkts/b Avg": "int32",
-        "Bwd Blk Rate Avg": "int32",
-        "Subflow Fwd Pkts": "int32",
-        "Subflow Fwd Byts": "int32",
-        "Subflow Bwd Pkts": "int32",
-        "Subflow Bwd Byts": "int32",
-        "Init Fwd Win Byts": "int32",
-        "Init Bwd Win Byts": "int32",
-        "Fwd Act Data Pkts": "int32",
-        "Fwd Seg Size Min": "int32",
-        "Active Mean": "float64",
-        "Active Std": "float64",
-        "Active Max": "int32",
-        "Active Min": "int32",
-        "Idle Mean": "float64",
-        "Idle Std": "float64",
-        "Idle Max": "int32",
-        "Idle Min": "int32",
-    })
     
     # make label boolean
     dataset["Label"] = dataset["Label"].map(lambda x: 0 if x == "Benign" else 1)
