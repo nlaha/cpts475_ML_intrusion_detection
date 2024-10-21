@@ -9,9 +9,6 @@ from sklearn.metrics import (
     recall_score,
 )
 import xgboost as xgb
-from sklearn.model_selection import (
-    train_test_split,
-)
 from bayes_opt import BayesianOptimization
 import numpy as np
 import duckdb
@@ -19,6 +16,7 @@ import os
 
 os.environ["MODIN_CPUS"] = str(THREADS)
 import modin.pandas as pd
+from modin.experimental.sklearn.model_selection import train_test_split
 import swifter
 
 MODEL_NAME = "xgboost_rf"
@@ -198,6 +196,10 @@ logger.info(dataset[target].value_counts())
 
 Y = dataset[target]
 X = dataset.drop(dropped_x_cols, axis=1)
+
+# filter out rows with NaN values
+Y = Y[X.notna().all(axis=1)]
+X = X.dropna()
 
 # print columns we're using for X and Y
 logger.info(f"X: {X.columns}")
