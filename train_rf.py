@@ -33,8 +33,8 @@ if USE_SOURCE_DATA:
                 df = pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}", low_memory=False)
                 # remove headers that were duplicated during concatenation
                 # i.e. check if a row has a nonnumeric value in any column
-                # if it does, it's a header row
-                df = df[df.apply(lambda x: x.str.isnumeric().all(), axis=1)]
+                # if it does, it's a header row. when doing this, ignore the timestamp and label columns
+                df = df[df.drop(["Timestamp", "Label"], axis=1).apply(lambda x: x.str.isnumeric().all(), axis=1)]
                 logger.info("Concatenating data with existing dataset...")
                 dataset = pd.concat([dataset, df], ignore_index=True)
                 logger.info(dataset.head())
