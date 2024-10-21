@@ -21,8 +21,8 @@ if USE_SOURCE_DATA:
     # load all csvs from the preprocessed data directory into a single dataframe
     logger.info("Loading preprocessed data...")
     
-    if os.path.exists("training_data_source.parquet"):
-        dataset = pd.read_parquet("training_data.parquet")
+    if os.path.exists("training_data_source.csv"):
+        dataset = duckdb.read_csv("training_data_source.csv")
         logger.info("Loaded data from parquet file")
     else:
         # remove all duplicate header rows from each csv
@@ -40,7 +40,12 @@ if USE_SOURCE_DATA:
                 logger.info(dataset.head())
 
         # save to parquet so we don't have to load it again
-        dataset.to_parquet("training_data_source.parquet")
+        logger.info("Saving data to csv file for next time")
+        duckdb.write_csv(dataset, "training_data_source.csv")
+        logger.info("Saved data to csv file for next time")
+        logger.info("Loading preprocessed data...")
+        dataset = duckdb.read_csv("training_data_source.csv")
+        logger.info("Loaded preprocessed data")
         
     logger.info("Loaded preprocessed data")
 else:
