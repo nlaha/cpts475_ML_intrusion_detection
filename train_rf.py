@@ -136,11 +136,7 @@ if USE_SOURCE_DATA:
                 # remove headers that were duplicated during concatenation
                 # in this case, we just check for the existence of a cell with the value "Protocol"
                 # use swifter so it runs on all cores
-                df = df[
-                    not df.drop(["Timestamp", "Label"], axis=1).swifter.apply(
-                        lambda x: x.astype(str).str.contains("Protocol").any(), axis=1
-                    )
-                ]
+                df = df[df["Protocol"] != "Protocol"]
                 
                 logger.info("Converting data types...")
                 # create any columns in DATA_TYPES.keys() that are missing
