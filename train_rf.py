@@ -113,7 +113,7 @@ if USE_SOURCE_DATA:
     logger.info("Loading preprocessed data...")
 
     if os.path.exists("training_data_source.csv"):
-        dataset = pd.read_csv("training_data.csv")
+        dataset = pd.read_csv("training_data_source.csv")
         logger.info("Loaded data from csv file")
     else:
         # remove all duplicate header rows from each csv
