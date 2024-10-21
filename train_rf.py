@@ -197,6 +197,13 @@ logger.info(dataset[target].value_counts())
 Y = dataset[target]
 X = dataset.drop(dropped_x_cols, axis=1)
 
+# if any rows have values that are infinite, replace them with NaN
+X = X.replace([np.inf, -np.inf], np.nan)
+Y = Y.replace([np.inf, -np.inf], np.nan)
+
+# log number of rows with NaN values
+logger.info(f"Rows with NaN values: {X.isna().any(axis=1).sum()}")
+
 # filter out rows with NaN values
 Y = Y[X.notna().all(axis=1)]
 X = X.dropna()
