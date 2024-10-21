@@ -22,6 +22,7 @@ import swifter
 MODEL_NAME = "xgboost_rf"
 USE_SOURCE_DATA = True
 SOURCE_DATA_DIR = "/home/nlaha/storage"
+DATASET_SAMPLE_PERCENT = 0.25
 
 DATA_TYPES = {
     "Dst Port": "Int64",
@@ -187,6 +188,9 @@ if USE_SOURCE_DATA:
         "Src IP",
         "Flow ID",
     ]
+    
+# sample the dataset to make it smaller
+dataset = dataset.sample(frac=DATASET_SAMPLE_PERCENT)
 
 # print the first few rows of the dataset
 logger.info(dataset.head())
