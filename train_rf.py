@@ -8,6 +8,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
 )
+from sklearn.model_selection import train_test_split
 import xgboost as xgb
 from bayes_opt import BayesianOptimization
 import numpy as np
@@ -16,7 +17,6 @@ import os
 
 os.environ["MODIN_CPUS"] = str(THREADS)
 import modin.pandas as pd
-from modin.experimental.sklearn.model_selection import train_test_split
 import swifter
 
 MODEL_NAME = "xgboost_rf"
