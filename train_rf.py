@@ -24,9 +24,9 @@ if USE_SOURCE_DATA:
     # load all csvs from the preprocessed data directory into a single dataframe
     logger.info("Loading preprocessed data...")
     
-    if os.path.exists("training_data_source.parquet"):
-        dataset = pd.read_parquet("training_data.parquet")
-        logger.info("Loaded data from parquet file")
+    if os.path.exists("training_data_source.csv"):
+        dataset = pd.read_csv("training_data.csv")
+        logger.info("Loaded data from csv file")
     else:
         # remove all duplicate header rows from each csv
         dataset = pd.DataFrame()
@@ -42,9 +42,11 @@ if USE_SOURCE_DATA:
                 dataset = pd.concat([dataset, df], ignore_index=True)
                 logger.info(dataset.head())
 
-        # save to parquet so we don't have to load it again
+        logger.info("Converting data types...")
+        # save to csv so we don't have to load it again
         dataset = dataset.convert_dtypes()
-        dataset.to_parquet("training_data_source.parquet")
+        logger.info("Saving data to csv file for next time")
+        dataset.to_csv("training_data_source.csv")
         
     logger.info("Loaded preprocessed data")
 else:
