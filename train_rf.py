@@ -8,7 +8,8 @@ from sklearn.model_selection import (
 from bayes_opt import BayesianOptimization
 import numpy as np
 import duckdb
-import pandas as pd
+import modin.pandas as pd
+import swifter
 import os
 
 THREADS = 35
@@ -33,7 +34,8 @@ if USE_SOURCE_DATA:
                 df = pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}", low_memory=False)
                 # remove headers that were duplicated during concatenation
                 # in this case, we just check for the existence of a cell with the value "Protocol"
-                df = df[df.drop(["Timestamp", "Label"], axis=1).apply(lambda x: x.astype(str).str.contains("Protocol").any(), axis=1) == False]
+                # use swifter so it runs on all cores
+                df = df[df.drop(["Timestamp", "Label"], axis=1).swifter.apply(lambda x: x.astype(str).str.contains("Protocol").any(), axis=1) == False]
                 logger.info("Concatenating data with existing dataset...")
                 dataset = pd.concat([dataset, df], ignore_index=True)
                 logger.info(dataset.head())
