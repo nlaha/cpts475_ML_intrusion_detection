@@ -1,3 +1,5 @@
+THREADS = 35
+
 import joblib
 from loguru import logger
 from sklearn.metrics import classification_report, f1_score, precision_score, recall_score
@@ -8,11 +10,11 @@ from sklearn.model_selection import (
 from bayes_opt import BayesianOptimization
 import numpy as np
 import duckdb
+import os
+os.environ["MODIN_CPUS"] = str(THREADS)
 import modin.pandas as pd
 import swifter
-import os
 
-THREADS = 35
 MODEL_NAME = "xgboost_rf"
 USE_SOURCE_DATA = True
 SOURCE_DATA_DIR = "/home/nlaha/storage"
