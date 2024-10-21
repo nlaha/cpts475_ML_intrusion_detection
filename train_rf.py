@@ -30,7 +30,7 @@ if USE_SOURCE_DATA:
         if not os.path.exists(f"{SOURCE_DATA_DIR}/clean/Processed Traffic Data for ML Algorithms"):
             for file in os.listdir(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms"):
                 logger.info(f"Removing duplicate headers from {file}...")
-                df = pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}")
+                df = pd.read_csv(f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}", low_memory=False)
                 # remove headers that were duplicated during concatenation
                 # i.e. check if a row has a nonnumeric value in any column
                 # if it does, it's a header row
