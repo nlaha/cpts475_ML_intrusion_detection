@@ -1,4 +1,4 @@
-THREADS = 35
+THREADS = 22
 
 import joblib
 from loguru import logger
@@ -16,13 +16,15 @@ import duckdb
 import os
 
 os.environ["MODIN_CPUS"] = str(THREADS)
-import modin.pandas as pd
+os.environ["MODIN_ENGINE"] = "ray"
+#import modin.pandas as pd
+import pandas as pd
 import swifter
 
 MODEL_NAME = "xgboost_rf"
 USE_SOURCE_DATA = True
-SOURCE_DATA_DIR = "/home/nlaha/storage"
-DATASET_SAMPLE_PERCENT = 0.25
+SOURCE_DATA_DIR = "source_data"
+DATASET_SAMPLE_PERCENT = 0.1
 
 DATA_TYPES = {
     "Dst Port": "Int64",
@@ -278,11 +280,13 @@ else:
         "colsample_bynode": (0.5, 1),
     }
 
+    logger.info("Tuning hyperparameters...")
+
     # Tune the hyperparameters
     # i.e. find the best settings for the training algorithm
-    xgb_bo = BayesianOptimization(run_with_params, params, verbose=0)
+    xgb_bo = BayesianOptimization(run_with_params, params)
 
-    xgb_bo.maximize(init_points=5, n_iter=25)
+    xgb_bo.maximize(init_points=2, n_iter=5)
 
     logger.info("Best parameters found: ", xgb_bo.max["params"])
     logger.info("Training the model with the best parameters...")
