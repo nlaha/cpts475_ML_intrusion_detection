@@ -15,100 +15,53 @@ import numpy as np
 import duckdb
 import os
 
+from config_source import SOURCE_DATA_DIR, SOURCE_DATA_TYPES
+
 os.environ["MODIN_CPUS"] = str(THREADS)
 os.environ["MODIN_ENGINE"] = "ray"
-#import modin.pandas as pd
+# import modin.pandas as pd
 import pandas as pd
 import swifter
 
-MODEL_NAME = "xgboost_rf"
-USE_SOURCE_DATA = True
-SOURCE_DATA_DIR = "source_data"
-DATASET_SAMPLE_PERCENT = 0.1
+USE_SOURCE_DATA = False
 
-DATA_TYPES = {
-    "Dst Port": "Int64",
-    "Src Port": "Int64",
-    "Protocol": "Int64",
-    "Timestamp": "string",
-    "Flow Duration": "Int64",
-    "Tot Fwd Pkts": "Int64",
-    "Tot Bwd Pkts": "Int64",
-    "TotLen Fwd Pkts": "Int64",
-    "TotLen Bwd Pkts": "Int64",
-    "Fwd Pkt Len Max": "Int64",
-    "Fwd Pkt Len Min": "Int64",
-    "Fwd Pkt Len Mean": "float64",
-    "Fwd Pkt Len Std": "float64",
-    "Bwd Pkt Len Max": "Int64",
-    "Bwd Pkt Len Min": "Int64",
-    "Bwd Pkt Len Mean": "float64",
-    "Bwd Pkt Len Std": "float64",
-    "Flow Byts/s": "float64",
-    "Flow Pkts/s": "float64",
-    "Flow IAT Mean": "float64",
-    "Flow IAT Std": "float64",
-    "Flow IAT Max": "Int64",
-    "Flow IAT Min": "Int64",
-    "Fwd IAT Tot": "Int64",
-    "Fwd IAT Mean": "float64",
-    "Fwd IAT Std": "float64",
-    "Fwd IAT Max": "Int64",
-    "Fwd IAT Min": "Int64",
-    "Bwd IAT Tot": "Int64",
-    "Bwd IAT Mean": "float64",
-    "Bwd IAT Std": "float64",
-    "Bwd IAT Max": "Int64",
-    "Bwd IAT Min": "Int64",
-    "Fwd PSH Flags": "Int64",
-    "Bwd PSH Flags": "Int64",
-    "Fwd URG Flags": "Int64",
-    "Bwd URG Flags": "Int64",
-    "Fwd Header Len": "Int64",
-    "Bwd Header Len": "Int64",
-    "Fwd Pkts/s": "float64",
-    "Bwd Pkts/s": "float64",
-    "Pkt Len Min": "Int64",
-    "Pkt Len Max": "Int64",
-    "Pkt Len Mean": "float64",
-    "Pkt Len Std": "float64",
-    "Pkt Len Var": "float64",
-    "FIN Flag Cnt": "Int64",
-    "SYN Flag Cnt": "Int64",
-    "RST Flag Cnt": "Int64",
-    "PSH Flag Cnt": "Int64",
-    "ACK Flag Cnt": "Int64",
-    "URG Flag Cnt": "Int64",
-    "CWE Flag Count": "Int64",
-    "ECE Flag Cnt": "Int64",
-    "Down/Up Ratio": "Int64",
-    "Pkt Size Avg": "float64",
-    "Fwd Seg Size Avg": "float64",
-    "Bwd Seg Size Avg": "float64",
-    "Fwd Byts/b Avg": "Int64",
-    "Fwd Pkts/b Avg": "Int64",
-    "Fwd Blk Rate Avg": "Int64",
-    "Bwd Byts/b Avg": "Int64",
-    "Bwd Pkts/b Avg": "Int64",
-    "Bwd Blk Rate Avg": "Int64",
-    "Subflow Fwd Pkts": "Int64",
-    "Subflow Fwd Byts": "Int64",
-    "Subflow Bwd Pkts": "Int64",
-    "Subflow Bwd Byts": "Int64",
-    "Init Fwd Win Byts": "Int64",
-    "Init Bwd Win Byts": "Int64",
-    "Fwd Act Data Pkts": "Int64",
-    "Fwd Seg Size Min": "Int64",
-    "Active Mean": "float64",
-    "Active Std": "float64",
-    "Active Max": "Int64",
-    "Active Min": "Int64",
-    "Idle Mean": "float64",
-    "Idle Std": "float64",
-    "Idle Max": "Int64",
-    "Idle Min": "Int64",
-    "Label": "string",
-}
+# Model name
+MODEL_NAME = "xgboost_rf_pca_features"
+
+# Sample percent of the dataset to use
+DATASET_SAMPLE_PERCENT = 1.0
+
+# DROPPED_X_COLS = [
+#     "Label",
+#     "Timestamp",
+#     "Dst Port",
+#     "Dst IP",
+#     "Src Port",
+#     "Src IP",
+#     "Flow ID",
+# ]
+
+# DROPPED_X_COLS = ["date_minutes", "attack_type", "is_attack", "has_attack_ip"]
+
+# TARGET = "Label"
+TARGET = "is_attack"
+X_COLS = [
+    "count_tcp_flags_res",
+    "count_tcp_flags_cwr",
+    "count_tcp_flags_ece",
+    "count_tcp_flags_push",
+    "count_tcp_flags_reset",
+    "count_tcp_flags_ae",
+    "count_tcp_flags_syn",
+    "count_tcp_flags_urg",
+    "count_tcp_flags_ack",
+    "count_tcp_flags_fin",
+    "avg_frame_time_delta",
+    "stddev_frame_time_delta",
+    "entropy_frame_len",
+    "entropy_frame_time_delta",
+    "entropy_tcp_time_relative",
+]
 
 if USE_SOURCE_DATA:
     MODEL_NAME += "_source_data"
@@ -132,22 +85,22 @@ if USE_SOURCE_DATA:
                     f"{SOURCE_DATA_DIR}/Processed Traffic Data for ML Algorithms/{file}",
                     low_memory=False,
                 )
-                
+
                 logger.info(f"Removing duplicate headers from {file}...")
                 # remove headers that were duplicated during concatenation
                 # in this case, we just check for the existence of a cell with the value "Protocol"
                 # use swifter so it runs on all cores
                 df = df[df["Protocol"] != "Protocol"]
-                
+
                 logger.info("Converting data types...")
                 # create any columns in DATA_TYPES.keys() that are missing
                 # and fill them with NaN
-                for col in DATA_TYPES.keys():
+                for col in SOURCE_DATA_TYPES.keys():
                     if col not in df.columns:
                         df[col] = np.nan
 
                 # cast data types
-                df = df.astype(DATA_TYPES)
+                df = df.astype(SOURCE_DATA_TYPES)
 
                 logger.info("Concatenating data with existing dataset...")
                 dataset = pd.concat([dataset, df], ignore_index=True)
@@ -173,24 +126,11 @@ else:
         dataset.to_parquet("training_data.parquet")
         logger.info("Saved data to parquet file for next time")
 
-target = "is_attack"
-dropped_x_cols = ["date_minutes", "attack_type", "is_attack", "has_attack_ip"]
-if USE_SOURCE_DATA:
-    # if we're using preprocessed data, we need to select different columns
-    target = "Label"
-    # map target to binary 0 or 1 depending of if it's 'Benign' or something else
-    dataset[target] = dataset[target].map(lambda x: 0 if x == "Benign" else 1)
 
-    dropped_x_cols = [
-        "Label",
-        "Timestamp",
-        "Dst Port",
-        "Dst IP",
-        "Src Port",
-        "Src IP",
-        "Flow ID",
-    ]
-    
+if USE_SOURCE_DATA:
+    # map target to binary 0 or 1 depending of if it's 'Benign' or something else
+    dataset[TARGET] = dataset[TARGET].map(lambda x: 0 if x == "Benign" else 1)
+
 # sample the dataset to make it smaller
 dataset = dataset.sample(frac=DATASET_SAMPLE_PERCENT)
 
@@ -198,10 +138,10 @@ dataset = dataset.sample(frac=DATASET_SAMPLE_PERCENT)
 logger.info(dataset.head())
 
 # print the count of each attack type
-logger.info(dataset[target].value_counts())
+logger.info(dataset[TARGET].value_counts())
 
-Y = dataset[target]
-X = dataset.drop(dropped_x_cols, axis=1)
+Y = dataset[TARGET]
+X = dataset[X_COLS]
 
 # if any rows have values that are infinite, replace them with NaN
 X = X.replace([np.inf, -np.inf], np.nan)
