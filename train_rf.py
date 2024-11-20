@@ -26,9 +26,9 @@ import swifter
 USE_SOURCE_DATA = True
 
 # Sample percent of the dataset to use
-DATASET_SAMPLE_PERCENT = 0.01
+DATASET_SAMPLE_PERCENT = 1.0
 
-SAMPLING_INTERVAL = '60s'
+SAMPLING_INTERVAL = "30s"
 
 # Model name
 MODEL_NAME = f"xgboost_rf_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
@@ -52,27 +52,83 @@ TARGET = "Label"
 
 # X_COLS = None
 X_COLS = [
-    'Protocol', 'Flow Duration', 'Tot Fwd Pkts',
-    'Tot Bwd Pkts', 'TotLen Fwd Pkts', 'TotLen Bwd Pkts', 'Fwd Pkt Len Max',
-    'Fwd Pkt Len Min', 'Fwd Pkt Len Mean', 'Fwd Pkt Len Std',
-    'Bwd Pkt Len Max', 'Bwd Pkt Len Min', 'Bwd Pkt Len Mean',
-    'Bwd Pkt Len Std', 'Flow Byts/s', 'Flow Pkts/s', 'Flow IAT Mean',
-    'Flow IAT Std', 'Flow IAT Max', 'Flow IAT Min', 'Fwd IAT Tot',
-    'Fwd IAT Mean', 'Fwd IAT Std', 'Fwd IAT Max', 'Fwd IAT Min',
-    'Bwd IAT Tot', 'Bwd IAT Mean', 'Bwd IAT Std', 'Bwd IAT Max',
-    'Bwd IAT Min', 'Fwd PSH Flags', 'Bwd PSH Flags', 'Fwd URG Flags',
-    'Bwd URG Flags', 'Fwd Header Len', 'Bwd Header Len', 'Fwd Pkts/s',
-    'Bwd Pkts/s', 'Pkt Len Min', 'Pkt Len Max', 'Pkt Len Mean',
-    'Pkt Len Std', 'Pkt Len Var', 'FIN Flag Cnt', 'SYN Flag Cnt',
-    'RST Flag Cnt', 'PSH Flag Cnt', 'ACK Flag Cnt', 'URG Flag Cnt',
-    'CWE Flag Count', 'ECE Flag Cnt', 'Down/Up Ratio', 'Pkt Size Avg',
-    'Fwd Seg Size Avg', 'Bwd Seg Size Avg', 'Fwd Byts/b Avg',
-    'Fwd Pkts/b Avg', 'Fwd Blk Rate Avg', 'Bwd Byts/b Avg',
-    'Bwd Pkts/b Avg', 'Bwd Blk Rate Avg', 'Subflow Fwd Pkts',
-    'Subflow Fwd Byts', 'Subflow Bwd Pkts', 'Subflow Bwd Byts',
-    'Init Fwd Win Byts', 'Init Bwd Win Byts', 'Fwd Act Data Pkts',
-    'Fwd Seg Size Min', 'Active Mean', 'Active Std', 'Active Max',
-    'Active Min', 'Idle Mean', 'Idle Std', 'Idle Max', 'Idle Min'
+    "Protocol",
+    "Flow Duration",
+    "Tot Fwd Pkts",
+    "Tot Bwd Pkts",
+    "TotLen Fwd Pkts",
+    "TotLen Bwd Pkts",
+    "Fwd Pkt Len Max",
+    "Fwd Pkt Len Min",
+    "Fwd Pkt Len Mean",
+    "Fwd Pkt Len Std",
+    "Bwd Pkt Len Max",
+    "Bwd Pkt Len Min",
+    "Bwd Pkt Len Mean",
+    "Bwd Pkt Len Std",
+    "Flow Byts/s",
+    "Flow Pkts/s",
+    "Flow IAT Mean",
+    "Flow IAT Std",
+    "Flow IAT Max",
+    "Flow IAT Min",
+    "Fwd IAT Tot",
+    "Fwd IAT Mean",
+    "Fwd IAT Std",
+    "Fwd IAT Max",
+    "Fwd IAT Min",
+    "Bwd IAT Tot",
+    "Bwd IAT Mean",
+    "Bwd IAT Std",
+    "Bwd IAT Max",
+    "Bwd IAT Min",
+    "Fwd PSH Flags",
+    "Bwd PSH Flags",
+    "Fwd URG Flags",
+    "Bwd URG Flags",
+    "Fwd Header Len",
+    "Bwd Header Len",
+    "Fwd Pkts/s",
+    "Bwd Pkts/s",
+    "Pkt Len Min",
+    "Pkt Len Max",
+    "Pkt Len Mean",
+    "Pkt Len Std",
+    "Pkt Len Var",
+    "FIN Flag Cnt",
+    "SYN Flag Cnt",
+    "RST Flag Cnt",
+    "PSH Flag Cnt",
+    "ACK Flag Cnt",
+    "URG Flag Cnt",
+    "CWE Flag Count",
+    "ECE Flag Cnt",
+    "Down/Up Ratio",
+    "Pkt Size Avg",
+    "Fwd Seg Size Avg",
+    "Bwd Seg Size Avg",
+    "Fwd Byts/b Avg",
+    "Fwd Pkts/b Avg",
+    "Fwd Blk Rate Avg",
+    "Bwd Byts/b Avg",
+    "Bwd Pkts/b Avg",
+    "Bwd Blk Rate Avg",
+    "Subflow Fwd Pkts",
+    "Subflow Fwd Byts",
+    "Subflow Bwd Pkts",
+    "Subflow Bwd Byts",
+    "Init Fwd Win Byts",
+    "Init Bwd Win Byts",
+    "Fwd Act Data Pkts",
+    "Fwd Seg Size Min",
+    "Active Mean",
+    "Active Std",
+    "Active Max",
+    "Active Min",
+    "Idle Mean",
+    "Idle Std",
+    "Idle Max",
+    "Idle Min",
 ]
 
 # X_COLS = [
@@ -166,21 +222,47 @@ dataset = dataset.sample(frac=DATASET_SAMPLE_PERCENT)
 
 # group by timestamp in 10 second intervals
 dataset[TIMESTAMP_COL] = pd.to_datetime(dataset[TIMESTAMP_COL], dayfirst=True)
-dataset['ts_interval'] = dataset[TIMESTAMP_COL].dt.floor(SAMPLING_INTERVAL)
+dataset["ts_interval"] = dataset[TIMESTAMP_COL].dt.floor(SAMPLING_INTERVAL)
+
+logger.info(dataset.head())
 
 # aggregate the data
-dataset = dataset.groupby(['ts_interval'], dropna=True).agg({
-    TIMESTAMP_COL: 'first',
-    'Protocol': 'first',
-    'Label': 'max',
-    'Dst Port': 'first',
-    'Dst IP': 'first',
-    'Src Port': 'first',
-    'Src IP': 'first',
-    'Flow ID': 'first',
-    # the rest of the columns are averaged
-    **{col: 'mean' for col in dataset.columns if col not in [TIMESTAMP_COL, 'Protocol', 'Label', 'Dst Port', 'Dst IP', 'Src Port', 'Src IP', 'Flow ID']}
-}).reset_index(drop=True)
+dataset = (
+    dataset.groupby(["ts_interval"], dropna=True)
+    .agg(
+        {
+            TIMESTAMP_COL: "first",
+            "Protocol": "first",
+            "Label": "max",
+            "Dst Port": "first",
+            "Dst IP": "first",
+            "Src Port": "first",
+            "Src IP": "first",
+            "Flow ID": "first",
+            # the rest of the columns are averaged
+            **{
+                col: "mean"
+                for col in dataset.columns
+                if col
+                not in [
+                    TIMESTAMP_COL,
+                    "Protocol",
+                    "Label",
+                    "Dst Port",
+                    "Dst IP",
+                    "Src Port",
+                    "Src IP",
+                    "Flow ID",
+                ]
+            },
+        }
+    )
+    .reset_index(drop=True)
+)
+
+# print number of positive and negative samples
+logger.info(f"Positive samples: {dataset[TARGET].sum()}")
+logger.info(f"Negative samples: {len(dataset) - dataset[TARGET].sum()}")
 
 # print the first few rows of the dataset
 logger.info(dataset.head())
@@ -215,8 +297,14 @@ logger.info(Y.dtypes)
 
 logger.info("Splitting the data into train, test sets...")
 X_train, X_test, Y_train, Y_test = train_test_split(
-    X, Y, test_size=0.2, random_state=42
+    X, Y, test_size=0.2, random_state=42, stratify=TARGET
 )
+
+# print sizes of train and test sets
+logger.info(f"Train X size: {len(X_train)}")
+logger.info(f"Test X size: {len(X_test)}")
+logger.info(f"Train Y size: {len(Y_train)}")
+logger.info(f"Test Y size: {len(Y_test)}")
 
 D_train = xgb.DMatrix(X_train, label=Y_train)
 D_test = xgb.DMatrix(X_test, label=Y_test)
@@ -301,5 +389,10 @@ predict_dmatrix = xgb.DMatrix(X_test)
 prediction = model_best.predict(predict_dmatrix)
 # convert prediction from continuous probabilities to binary values
 prediction = np.where(prediction > 0.5, 1, 0)
+
+# get number of positive and negative predictions
+logger.info(f"Positive predictions: {np.sum(prediction)}")
+logger.info(f"Negative predictions: {len(prediction) - np.sum(prediction)}")
+
 logger.info("Accuracy: " + str(np.mean(prediction == Y_test)))
 logger.info("\n" + classification_report(Y_test, prediction))
