@@ -28,7 +28,7 @@ USE_SOURCE_DATA = True
 # Sample percent of the dataset to use
 DATASET_SAMPLE_PERCENT = 0.01
 
-SAMPLING_INTERVAL = '10s'
+SAMPLING_INTERVAL = '60s'
 
 # Model name
 MODEL_NAME = f"xgboost_rf_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
