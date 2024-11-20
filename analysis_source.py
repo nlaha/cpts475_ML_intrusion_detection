@@ -1,0 +1,113 @@
+import duckdb
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+full_data = duckdb.read_csv('training_data_source.csv').df()
+data = full_data.sample(0.1)
+
+plt.figure(figsize=(5, 3))
+# pivot columns to longer format
+bots_data_melt = data.melt(id_vars=['Label'], value_vars=[
+    "Dst Port",
+    "Src Port",
+    "Protocol",
+    "Timestamp",
+    "Flow Duration",
+    "Tot Fwd Pkts",
+    "Tot Bwd Pkts",
+    "TotLen Fwd Pkts",
+    "TotLen Bwd Pkts",
+    "Fwd Pkt Len Max",
+    "Fwd Pkt Len Min",
+    "Fwd Pkt Len Mean",
+    "Fwd Pkt Len Std",
+    "Bwd Pkt Len Max",
+    "Bwd Pkt Len Min",
+    "Bwd Pkt Len Mean",
+    "Bwd Pkt Len Std",
+    "Flow Byts/s",
+    "Flow Pkts/s",
+    "Flow IAT Mean",
+    "Flow IAT Std",
+    "Flow IAT Max",
+    "Flow IAT Min",
+    "Fwd IAT Tot",
+    "Fwd IAT Mean",
+    "Fwd IAT Std",
+    "Fwd IAT Max",
+    "Fwd IAT Min",
+    "Bwd IAT Tot",
+    "Bwd IAT Mean",
+    "Bwd IAT Std",
+    "Bwd IAT Max",
+    "Bwd IAT Min",
+    "Fwd PSH Flags",
+    "Bwd PSH Flags",
+    "Fwd URG Flags",
+    "Bwd URG Flags",
+    "Fwd Header Len",
+    "Bwd Header Len",
+    "Fwd Pkts/s",
+    "Bwd Pkts/s",
+    "Pkt Len Min",
+    "Pkt Len Max",
+    "Pkt Len Mean",
+    "Pkt Len Std",
+    "Pkt Len Var",
+    "FIN Flag Cnt",
+    "SYN Flag Cnt",
+    "RST Flag Cnt",
+    "PSH Flag Cnt",
+    "ACK Flag Cnt",
+    "URG Flag Cnt",
+    "CWE Flag Count",
+    "ECE Flag Cnt",
+    "Down/Up Ratio",
+    "Pkt Size Avg",
+    "Fwd Seg Size Avg",
+    "Bwd Seg Size Avg",
+    "Fwd Byts/b Avg",
+    "Fwd Pkts/b Avg",
+    "Fwd Blk Rate Avg",
+    "Bwd Byts/b Avg",
+    "Bwd Pkts/b Avg",
+    "Bwd Blk Rate Avg",
+    "Subflow Fwd Pkts",
+    "Subflow Fwd Byts",
+    "Subflow Bwd Pkts",
+    "Subflow Bwd Byts",
+    "Init Fwd Win Byts",
+    "Init Bwd Win Byts",
+    "Fwd Act Data Pkts",
+    "Fwd Seg Size Min",
+    "Active Mean",
+    "Active Std",
+    "Active Max",
+    "Active Min",
+    "Idle Mean",
+    "Idle Std",
+    "Idle Max",
+    "Idle Min",
+])
+
+sns.catplot(
+    data=bots_data_melt,
+    y='Label',
+    x='value',
+    kind='box',
+    col='variable',
+    orient='h',
+    col_wrap=4,
+    sharey=True,
+    sharex=False,
+    height=3,
+    aspect=1.2,
+    margin_titles=True,
+)
+
+# add title on top of facet grid
+plt.subplots_adjust(top=0.9)
+plt.suptitle('Feature distribution for IP addresses with and without attacks')
+
+plt.savefig('boxplot_source.png')

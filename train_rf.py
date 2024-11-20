@@ -1,4 +1,4 @@
-THREADS = 22
+THREADS = 34
 
 import joblib
 from loguru import logger
@@ -23,13 +23,13 @@ os.environ["MODIN_ENGINE"] = "ray"
 import pandas as pd
 import swifter
 
-USE_SOURCE_DATA = False
+USE_SOURCE_DATA = True
 
 # Model name
-MODEL_NAME = "xgboost_rf_pca_features"
+MODEL_NAME = "xgboost_rf_ten_percent_data"
 
 # Sample percent of the dataset to use
-DATASET_SAMPLE_PERCENT = 1.0
+DATASET_SAMPLE_PERCENT = 0.1
 
 # DROPPED_X_COLS = [
 #     "Label",
@@ -43,25 +43,51 @@ DATASET_SAMPLE_PERCENT = 1.0
 
 # DROPPED_X_COLS = ["date_minutes", "attack_type", "is_attack", "has_attack_ip"]
 
-# TARGET = "Label"
-TARGET = "is_attack"
+TARGET = "Label"
+# TARGET = "has_attack_ip"
+
+# X_COLS = None
 X_COLS = [
-    "count_tcp_flags_res",
-    "count_tcp_flags_cwr",
-    "count_tcp_flags_ece",
-    "count_tcp_flags_push",
-    "count_tcp_flags_reset",
-    "count_tcp_flags_ae",
-    "count_tcp_flags_syn",
-    "count_tcp_flags_urg",
-    "count_tcp_flags_ack",
-    "count_tcp_flags_fin",
-    "avg_frame_time_delta",
-    "stddev_frame_time_delta",
-    "entropy_frame_len",
-    "entropy_frame_time_delta",
-    "entropy_tcp_time_relative",
+    'Protocol', 'Flow Duration', 'Tot Fwd Pkts',
+       'Tot Bwd Pkts', 'TotLen Fwd Pkts', 'TotLen Bwd Pkts', 'Fwd Pkt Len Max',
+       'Fwd Pkt Len Min', 'Fwd Pkt Len Mean', 'Fwd Pkt Len Std',
+       'Bwd Pkt Len Max', 'Bwd Pkt Len Min', 'Bwd Pkt Len Mean',
+       'Bwd Pkt Len Std', 'Flow Byts/s', 'Flow Pkts/s', 'Flow IAT Mean',
+       'Flow IAT Std', 'Flow IAT Max', 'Flow IAT Min', 'Fwd IAT Tot',
+       'Fwd IAT Mean', 'Fwd IAT Std', 'Fwd IAT Max', 'Fwd IAT Min',
+       'Bwd IAT Tot', 'Bwd IAT Mean', 'Bwd IAT Std', 'Bwd IAT Max',
+       'Bwd IAT Min', 'Fwd PSH Flags', 'Bwd PSH Flags', 'Fwd URG Flags',
+       'Bwd URG Flags', 'Fwd Header Len', 'Bwd Header Len', 'Fwd Pkts/s',
+       'Bwd Pkts/s', 'Pkt Len Min', 'Pkt Len Max', 'Pkt Len Mean',
+       'Pkt Len Std', 'Pkt Len Var', 'FIN Flag Cnt', 'SYN Flag Cnt',
+       'RST Flag Cnt', 'PSH Flag Cnt', 'ACK Flag Cnt', 'URG Flag Cnt',
+       'CWE Flag Count', 'ECE Flag Cnt', 'Down/Up Ratio', 'Pkt Size Avg',
+       'Fwd Seg Size Avg', 'Bwd Seg Size Avg', 'Fwd Byts/b Avg',
+       'Fwd Pkts/b Avg', 'Fwd Blk Rate Avg', 'Bwd Byts/b Avg',
+       'Bwd Pkts/b Avg', 'Bwd Blk Rate Avg', 'Subflow Fwd Pkts',
+       'Subflow Fwd Byts', 'Subflow Bwd Pkts', 'Subflow Bwd Byts',
+       'Init Fwd Win Byts', 'Init Bwd Win Byts', 'Fwd Act Data Pkts',
+       'Fwd Seg Size Min', 'Active Mean', 'Active Std', 'Active Max',
+       'Active Min', 'Idle Mean', 'Idle Std', 'Idle Max', 'Idle Min'
 ]
+
+# X_COLS = [
+#     # "count_tcp_flags_res",
+#     # "count_tcp_flags_cwr",
+#     # "count_tcp_flags_ece",
+#     # "count_tcp_flags_push",
+#     # "count_tcp_flags_reset",
+#     # "count_tcp_flags_ae",
+#     # "count_tcp_flags_syn",
+#     # "count_tcp_flags_urg",
+#     # "count_tcp_flags_ack",
+#     # "count_tcp_flags_fin",
+#     "avg_frame_time_delta",
+#     "stddev_frame_time_delta",
+#     "entropy_frame_len",
+#     "entropy_frame_time_delta",
+#     "entropy_tcp_time_relative",
+# ]
 
 if USE_SOURCE_DATA:
     MODEL_NAME += "_source_data"
@@ -140,8 +166,11 @@ logger.info(dataset.head())
 # print the count of each attack type
 logger.info(dataset[TARGET].value_counts())
 
-Y = dataset[TARGET]
-X = dataset[X_COLS]
+Y = dataset[TARGET].copy()
+if X_COLS:
+    X = dataset[X_COLS]
+else:
+    X = dataset.drop(DROPPED_X_COLS, axis=1)
 
 # if any rows have values that are infinite, replace them with NaN
 X = X.replace([np.inf, -np.inf], np.nan)
