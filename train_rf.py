@@ -28,7 +28,7 @@ USE_SOURCE_DATA = True
 # Sample percent of the dataset to use
 DATASET_SAMPLE_PERCENT = 1.0
 
-SAMPLING_INTERVAL = "30s"
+SAMPLING_INTERVAL = "10s"
 
 # Model name
 MODEL_NAME = f"xgboost_rf_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
@@ -297,7 +297,7 @@ logger.info(Y.dtypes)
 
 logger.info("Splitting the data into train, test sets...")
 X_train, X_test, Y_train, Y_test = train_test_split(
-    X, Y, test_size=0.2, random_state=42, stratify=TARGET
+    X, Y, test_size=0.2, random_state=42, stratify=Y
 )
 
 # print sizes of train and test sets
