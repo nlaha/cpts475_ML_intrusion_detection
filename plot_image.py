@@ -26,6 +26,20 @@ accuracy_60 = {
     "60 seconds - Anomalous": [99, 99, 99, 100, 97, 100]
 }
 
+accuracy_non_anomalous = {
+    "10 seconds": [92, 91, 89, 89, 87],
+    "30 seconds": [86, 90, 86, 89, 89],
+    "60 seconds": [90, 90, 86, 86, 90],
+    "Percentages": [0.5, 1, 2.5, 5, 10]
+}
+
+accuracy_anomalous = {
+    "10 seconds": [99, 100, 93, 97, 95],
+    "30 seconds": [97, 97, 97, 92, 96],
+    "60 seconds": [99, 99, 99, 100, 97],
+    "Percentages": [0.5, 1, 2.5, 5, 10]
+}
+
 recall_score = {
     "10 seconds - Non-Anomalous ": [100, 100, 99, 100, 99],
     "10 seconds - Anomalous""": [62, 57, 55, 59, 52],
@@ -248,4 +262,28 @@ def plots():
         output_file = f"images/grouped_bar_plot_{idx}.png"  # Unique filename for each plot
         plt.savefig(output_file_name, dpi=300, bbox_inches="tight")  
     print("Plots have been saved as images in the images folder")
-plots();
+
+# Restore the function to plot the data in a scatter plot and connect the dots with a line graph
+def group_plots():
+    # First we'll plot the non-anomalous data
+
+    fig,ax = plt.subplots(figsize=(10, 6))
+    ax.plot(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["10 seconds"], marker="o", label="10 seconds")
+    ax.plot(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["30 seconds"], marker="o", label="30 seconds")
+    ax.plot(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["60 seconds"], marker="o", label="60 seconds")
+    ax.scatter(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["10 seconds"])
+    ax.scatter(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["30 seconds"])
+    ax.scatter(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["60 seconds"])    
+    # Set the precision as y axis
+
+
+    ax.set_xlabel("Intervals")
+    ax.set_ylabel("Percentage")
+    ax.set_title("Non-Anomalous Precision Scores with Time Intervals")
+    ax.legend(title="Time Intervals")
+    ax.set_ylim(80, 100)
+    output_file = "images/non_anomalous_precision_scores.png"
+    plt.savefig(output_file, dpi=300, bbox_inches="tight")
+
+# plots();
+group_plots();
