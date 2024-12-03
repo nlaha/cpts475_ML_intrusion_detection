@@ -267,23 +267,37 @@ def plots():
 def group_plots():
     # First we'll plot the non-anomalous data
 
-    fig,ax = plt.subplots(figsize=(10, 6))
+    fig,ax = plt.subplots(figsize=(5, 3))
     ax.plot(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["10 seconds"], marker="o", label="10 seconds")
     ax.plot(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["30 seconds"], marker="o", label="30 seconds")
     ax.plot(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["60 seconds"], marker="o", label="60 seconds")
     ax.scatter(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["10 seconds"])
     ax.scatter(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["30 seconds"])
     ax.scatter(accuracy_non_anomalous["Percentages"], accuracy_non_anomalous["60 seconds"])    
-    # Set the precision as y axis
-
-
     ax.set_xlabel("Intervals")
     ax.set_ylabel("Percentage")
-    ax.set_title("Non-Anomalous Precision Scores with Time Intervals")
+    ax.set_title("Non-Anomaly Detection Precision Scores with Time Intervals")
     ax.legend(title="Time Intervals")
     ax.set_ylim(80, 100)
-    output_file = "images/non_anomalous_precision_scores.png"
+    output_file = "images/non_anomalous_precision_scores2.png"
     plt.savefig(output_file, dpi=300, bbox_inches="tight")
+
+    # Next we'll plot the anomalous data	
+    fig2,ax2 = plt.subplots(figsize=(6, 3))
+    ax2.plot(accuracy_anomalous["Percentages"], accuracy_anomalous["10 seconds"], marker="o", label="10 seconds")
+    ax2.plot(accuracy_anomalous["Percentages"], accuracy_anomalous["30 seconds"], marker="o", label="30 seconds")
+    ax2.plot(accuracy_anomalous["Percentages"], accuracy_anomalous["60 seconds"], marker="o", label="60 seconds")
+    ax2.scatter(accuracy_anomalous["Percentages"], accuracy_anomalous["10 seconds"])
+    ax2.scatter(accuracy_anomalous["Percentages"], accuracy_anomalous["30 seconds"])
+    ax2.scatter(accuracy_anomalous["Percentages"], accuracy_anomalous["60 seconds"])
+    ax2.set_xlabel("Time Intervals")
+    ax2.set_ylabel("Percentage")
+    ax2.set_title("Anomaly Detection Precision Scores with Time Intervals")
+    ax2.legend(title="Time Intervals")
+    ax2.set_ylim(80, 100)
+    output_file = "images/anomalous_precision_scores2.png"
+    plt.savefig(output_file, dpi=300, bbox_inches="tight") 
+    # TEST
 
 # plots();
 group_plots();
