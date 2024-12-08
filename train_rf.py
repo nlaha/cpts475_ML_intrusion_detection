@@ -23,131 +23,131 @@ os.environ["MODIN_ENGINE"] = "ray"
 import pandas as pd
 import swifter
 
-USE_SOURCE_DATA = True
+USE_SOURCE_DATA = False
 
 # Sample percent of the dataset to use
 DATASET_SAMPLE_PERCENT = 1.0
 
-SAMPLING_INTERVAL = "10s"
+SAMPLING_INTERVAL = "60s"
 
 # Model name
-MODEL_NAME = f"xgboost_rf_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
+MODEL_NAME = f"xgboost_rf_new_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
 
 TIMESTAMP_COL = "Timestamp"
 
-DROPPED_X_COLS = [
-    "Label",
-    "Timestamp",
-    "Dst Port",
-    "Dst IP",
-    "Src Port",
-    "Src IP",
-    "Flow ID",
-]
+# DROPPED_X_COLS = [
+#     "Label",
+#     "Timestamp",
+#     "Dst Port",
+#     "Dst IP",
+#     "Src Port",
+#     "Src IP",
+#     "Flow ID",
+# ]
 
-# DROPPED_X_COLS = ["date_minutes", "attack_type", "is_attack", "has_attack_ip"]
+DROPPED_X_COLS = ["date_minutes", "attack_type", "is_attack", "has_attack_ip"]
 
-TARGET = "Label"
-# TARGET = "has_attack_ip"
+# TARGET = "Label"
+TARGET = "is_attack"
 
 # X_COLS = None
-X_COLS = [
-    "Protocol",
-    "Flow Duration",
-    "Tot Fwd Pkts",
-    "Tot Bwd Pkts",
-    "TotLen Fwd Pkts",
-    "TotLen Bwd Pkts",
-    "Fwd Pkt Len Max",
-    "Fwd Pkt Len Min",
-    "Fwd Pkt Len Mean",
-    "Fwd Pkt Len Std",
-    "Bwd Pkt Len Max",
-    "Bwd Pkt Len Min",
-    "Bwd Pkt Len Mean",
-    "Bwd Pkt Len Std",
-    "Flow Byts/s",
-    "Flow Pkts/s",
-    "Flow IAT Mean",
-    "Flow IAT Std",
-    "Flow IAT Max",
-    "Flow IAT Min",
-    "Fwd IAT Tot",
-    "Fwd IAT Mean",
-    "Fwd IAT Std",
-    "Fwd IAT Max",
-    "Fwd IAT Min",
-    "Bwd IAT Tot",
-    "Bwd IAT Mean",
-    "Bwd IAT Std",
-    "Bwd IAT Max",
-    "Bwd IAT Min",
-    "Fwd PSH Flags",
-    "Bwd PSH Flags",
-    "Fwd URG Flags",
-    "Bwd URG Flags",
-    "Fwd Header Len",
-    "Bwd Header Len",
-    "Fwd Pkts/s",
-    "Bwd Pkts/s",
-    "Pkt Len Min",
-    "Pkt Len Max",
-    "Pkt Len Mean",
-    "Pkt Len Std",
-    "Pkt Len Var",
-    "FIN Flag Cnt",
-    "SYN Flag Cnt",
-    "RST Flag Cnt",
-    "PSH Flag Cnt",
-    "ACK Flag Cnt",
-    "URG Flag Cnt",
-    "CWE Flag Count",
-    "ECE Flag Cnt",
-    "Down/Up Ratio",
-    "Pkt Size Avg",
-    "Fwd Seg Size Avg",
-    "Bwd Seg Size Avg",
-    "Fwd Byts/b Avg",
-    "Fwd Pkts/b Avg",
-    "Fwd Blk Rate Avg",
-    "Bwd Byts/b Avg",
-    "Bwd Pkts/b Avg",
-    "Bwd Blk Rate Avg",
-    "Subflow Fwd Pkts",
-    "Subflow Fwd Byts",
-    "Subflow Bwd Pkts",
-    "Subflow Bwd Byts",
-    "Init Fwd Win Byts",
-    "Init Bwd Win Byts",
-    "Fwd Act Data Pkts",
-    "Fwd Seg Size Min",
-    "Active Mean",
-    "Active Std",
-    "Active Max",
-    "Active Min",
-    "Idle Mean",
-    "Idle Std",
-    "Idle Max",
-    "Idle Min",
-]
-
 # X_COLS = [
-#     # "count_tcp_flags_res",
-#     # "count_tcp_flags_cwr",
-#     # "count_tcp_flags_ece",
-#     # "count_tcp_flags_push",
-#     # "count_tcp_flags_reset",
-#     # "count_tcp_flags_ae",
-#     # "count_tcp_flags_syn",
-#     # "count_tcp_flags_urg",
-#     # "count_tcp_flags_ack",
-#     # "count_tcp_flags_fin",
-#     "avg_frame_time_delta",
-#     "stddev_frame_time_delta",
-#     "entropy_frame_len",
-#     "entropy_frame_time_delta",
-#     "entropy_tcp_time_relative",
+#     "Protocol",
+#     "Flow Duration",
+#     "Tot Fwd Pkts",
+#     "Tot Bwd Pkts",
+#     "TotLen Fwd Pkts",
+#     "TotLen Bwd Pkts",
+#     "Fwd Pkt Len Max",
+#     "Fwd Pkt Len Min",
+#     "Fwd Pkt Len Mean",
+#     "Fwd Pkt Len Std",
+#     "Bwd Pkt Len Max",
+#     "Bwd Pkt Len Min",
+#     "Bwd Pkt Len Mean",
+#     "Bwd Pkt Len Std",
+#     "Flow Byts/s",
+#     "Flow Pkts/s",
+#     "Flow IAT Mean",
+#     "Flow IAT Std",
+#     "Flow IAT Max",
+#     "Flow IAT Min",
+#     "Fwd IAT Tot",
+#     "Fwd IAT Mean",
+#     "Fwd IAT Std",
+#     "Fwd IAT Max",
+#     "Fwd IAT Min",
+#     "Bwd IAT Tot",
+#     "Bwd IAT Mean",
+#     "Bwd IAT Std",
+#     "Bwd IAT Max",
+#     "Bwd IAT Min",
+#     "Fwd PSH Flags",
+#     "Bwd PSH Flags",
+#     "Fwd URG Flags",
+#     "Bwd URG Flags",
+#     "Fwd Header Len",
+#     "Bwd Header Len",
+#     "Fwd Pkts/s",
+#     "Bwd Pkts/s",
+#     "Pkt Len Min",
+#     "Pkt Len Max",
+#     "Pkt Len Mean",
+#     "Pkt Len Std",
+#     "Pkt Len Var",
+#     "FIN Flag Cnt",
+#     "SYN Flag Cnt",
+#     "RST Flag Cnt",
+#     "PSH Flag Cnt",
+#     "ACK Flag Cnt",
+#     "URG Flag Cnt",
+#     "CWE Flag Count",
+#     "ECE Flag Cnt",
+#     "Down/Up Ratio",
+#     "Pkt Size Avg",
+#     "Fwd Seg Size Avg",
+#     "Bwd Seg Size Avg",
+#     "Fwd Byts/b Avg",
+#     "Fwd Pkts/b Avg",
+#     "Fwd Blk Rate Avg",
+#     "Bwd Byts/b Avg",
+#     "Bwd Pkts/b Avg",
+#     "Bwd Blk Rate Avg",
+#     "Subflow Fwd Pkts",
+#     "Subflow Fwd Byts",
+#     "Subflow Bwd Pkts",
+#     "Subflow Bwd Byts",
+#     "Init Fwd Win Byts",
+#     "Init Bwd Win Byts",
+#     "Fwd Act Data Pkts",
+#     "Fwd Seg Size Min",
+#     "Active Mean",
+#     "Active Std",
+#     "Active Max",
+#     "Active Min",
+#     "Idle Mean",
+#     "Idle Std",
+#     "Idle Max",
+#     "Idle Min",
 # ]
+
+X_COLS = [
+    "count_tcp_flags_res",
+    "count_tcp_flags_cwr",
+    "count_tcp_flags_ece",
+    "count_tcp_flags_push",
+    "count_tcp_flags_reset",
+    "count_tcp_flags_ae",
+    "count_tcp_flags_syn",
+    "count_tcp_flags_urg",
+    "count_tcp_flags_ack",
+    "count_tcp_flags_fin",
+    "avg_frame_time_delta",
+    "stddev_frame_time_delta",
+    "entropy_frame_len",
+    "entropy_frame_time_delta",
+    "entropy_tcp_time_relative",
+]
 
 if USE_SOURCE_DATA:
     MODEL_NAME += "_source_data"
@@ -212,53 +212,56 @@ else:
         dataset.to_parquet("training_data.parquet")
         logger.info("Saved data to parquet file for next time")
 
+# count rows before sampling
+logger.info(f"Rows before sampling: {len(dataset)}")
+
+# sample the dataset to make it smaller
+dataset = dataset.sample(frac=DATASET_SAMPLE_PERCENT)
 
 if USE_SOURCE_DATA:
     # map target to binary 0 or 1 depending of if it's 'Benign' or something else
     dataset[TARGET] = dataset[TARGET].map(lambda x: 0 if x == "Benign" else 1)
 
-# sample the dataset to make it smaller
-dataset = dataset.sample(frac=DATASET_SAMPLE_PERCENT)
+    # group by timestamp in intervals
+    dataset[TIMESTAMP_COL] = pd.to_datetime(dataset[TIMESTAMP_COL], dayfirst=True)
+    dataset["ts_interval"] = dataset[TIMESTAMP_COL].dt.floor(SAMPLING_INTERVAL)
 
-# group by timestamp in 10 second intervals
-dataset[TIMESTAMP_COL] = pd.to_datetime(dataset[TIMESTAMP_COL], dayfirst=True)
-dataset["ts_interval"] = dataset[TIMESTAMP_COL].dt.floor(SAMPLING_INTERVAL)
+    # aggregate the data
+    dataset = (
+        dataset.groupby(["ts_interval"], dropna=True)
+        .agg(
+            {
+                TIMESTAMP_COL: "first",
+                "Protocol": "first",
+                "Label": "max",
+                "Dst Port": "first",
+                "Dst IP": "first",
+                "Src Port": "first",
+                "Src IP": "first",
+                "Flow ID": "first",
+                # the rest of the columns are averaged
+                **{
+                    col: "mean"
+                    for col in dataset.columns
+                    if col
+                    not in [
+                        TIMESTAMP_COL,
+                        "Protocol",
+                        "Label",
+                        "Dst Port",
+                        "Dst IP",
+                        "Src Port",
+                        "Src IP",
+                        "Flow ID",
+                    ]
+                },
+            }
+        )
+        .reset_index(drop=True)
+    )
+
 
 logger.info(dataset.head())
-
-# aggregate the data
-dataset = (
-    dataset.groupby(["ts_interval"], dropna=True)
-    .agg(
-        {
-            TIMESTAMP_COL: "first",
-            "Protocol": "first",
-            "Label": "max",
-            "Dst Port": "first",
-            "Dst IP": "first",
-            "Src Port": "first",
-            "Src IP": "first",
-            "Flow ID": "first",
-            # the rest of the columns are averaged
-            **{
-                col: "mean"
-                for col in dataset.columns
-                if col
-                not in [
-                    TIMESTAMP_COL,
-                    "Protocol",
-                    "Label",
-                    "Dst Port",
-                    "Dst IP",
-                    "Src Port",
-                    "Src IP",
-                    "Flow ID",
-                ]
-            },
-        }
-    )
-    .reset_index(drop=True)
-)
 
 # print number of positive and negative samples
 logger.info(f"Positive samples: {dataset[TARGET].sum()}")
@@ -318,7 +321,7 @@ else:
     logger.info("Training the XGBoost classifier...")
 
     def run_with_params(
-        max_depth, gamma, learning_rate, num_parallel_tree, subsample, colsample_bynode
+        max_depth, gamma, learning_rate, num_parallel_tree, subsample, colsample_bynode, scale_pos_weight
     ):
         """
         Run the XGBoost classifier with the given parameters
@@ -328,11 +331,12 @@ else:
             "gamma": gamma,
             "learning_rate": learning_rate,
             "subsample": subsample,
-            "tree_method": "hist",
+            "tree_method": "auto",
             "num_parallel_tree": int(num_parallel_tree),
             "colsample_bynode": colsample_bynode,
             "nthread": THREADS,
-            "objective": "binary:logistic",
+            "objective": "binary:hinge",
+            "scale_pos_weight": scale_pos_weight,
         }
 
         # perform cross-validation
@@ -357,6 +361,7 @@ else:
         "subsample": (0.5, 1),
         "num_parallel_tree": (50, 1000),
         "colsample_bynode": (0.5, 1),
+        "scale_pos_weight": (1, 50),
     }
 
     logger.info("Tuning hyperparameters...")
@@ -365,7 +370,7 @@ else:
     # i.e. find the best settings for the training algorithm
     xgb_bo = BayesianOptimization(run_with_params, params)
 
-    xgb_bo.maximize(init_points=2, n_iter=5)
+    xgb_bo.maximize(init_points=5, n_iter=20)
 
     logger.info("Best parameters found: ", xgb_bo.max["params"])
     logger.info("Training the model with the best parameters...")
@@ -373,6 +378,9 @@ else:
     best_params = xgb_bo.max["params"]
     best_params["max_depth"] = int(best_params["max_depth"])
     best_params["num_parallel_tree"] = int(best_params["num_parallel_tree"])
+    best_params["objective"] = "binary:hinge"
+    best_params["nthread"] = THREADS
+    best_params["tree_method"] = "auto"
 
     model_best = xgb.train(best_params, D_train, num_boost_round=10)
 
@@ -387,8 +395,9 @@ else:
 logger.info("Testing the model...")
 predict_dmatrix = xgb.DMatrix(X_test)
 prediction = model_best.predict(predict_dmatrix)
-# convert prediction from continuous probabilities to binary values
-prediction = np.where(prediction > 0.5, 1, 0)
+
+# print predictions 
+logger.info(prediction)
 
 # get number of positive and negative predictions
 logger.info(f"Positive predictions: {np.sum(prediction)}")
