@@ -75,6 +75,16 @@ def post_process_database(table_source, attack_date):
             avg(frame_len) as avg_frame_len,
             avg(tcp_hdr_len) as avg_tcp_hdr_len,
             avg(tcp_time_relative) as avg_tcp_time_relative,
+
+            min(frame_time_delta) as min_frame_time_delta,
+            min(frame_len) as min_frame_len,
+            min(tcp_hdr_len) as min_tcp_hdr_len,
+            min(tcp_time_relative) as min_tcp_time_relative,
+
+            max(frame_time_delta) as max_frame_time_delta,
+            max(frame_len) as max_frame_len,
+            max(tcp_hdr_len) as max_tcp_hdr_len,
+            max(tcp_time_relative) as max_tcp_time_relative,
             
             stddev_samp(frame_time_delta) as stddev_frame_time_delta,
             stddev_samp(frame_len) as stddev_frame_len,

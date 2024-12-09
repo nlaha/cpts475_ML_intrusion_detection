@@ -7,7 +7,7 @@ TSHARK_PATH = "tshark"
 SEVENZIP_PATH = "7z"
 
 # Path to the directory that will hold all the processed data
-PROCESSED_DATA_DIR = "data"
+PROCESSED_DATA_DIR = "/home/nlaha/storage/nids_data_processed"
 
 # Path to the directory that will hold the extracted pcap files
 PCAP_DATA_PATH = os.path.join(PROCESSED_DATA_DIR, "pcap")
@@ -23,7 +23,7 @@ NUM_CORES = 20
 ########################
 # Source dataset paths #
 ########################
-SOURCE_DATA_DIR = os.path.join("source_data", "Original Network Traffic and Log data")
+SOURCE_DATA_DIR = os.path.join("/home/nlaha/storage", "Original Network Traffic and Log data")
 
 
 #########################

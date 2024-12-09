@@ -14,6 +14,9 @@ from steps.merge_data import merge_tsv_files
 from steps.db_processing import post_process_database
 
 if __name__ == '__main__':
+
+    # log source data directory
+    logger.info(f"Source data directory: {SOURCE_DATA_DIR}")
  
     # iterate through each subdirectory of SOURCE_DATA_DIR
     for root, dirs, files in os.walk(SOURCE_DATA_DIR):

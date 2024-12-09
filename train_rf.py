@@ -15,6 +15,7 @@ import numpy as np
 import duckdb
 import os
 
+from config import DUCKDB_PATH
 from config_source import SOURCE_DATA_DIR, SOURCE_DATA_TYPES
 
 os.environ["MODIN_CPUS"] = str(THREADS)
@@ -31,7 +32,7 @@ DATASET_SAMPLE_PERCENT = 1.0
 SAMPLING_INTERVAL = "60s"
 
 # Model name
-MODEL_NAME = f"xgboost_rf_new_more_features_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
+MODEL_NAME = f"xgboost_rf_new_min_max_mode_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
 
 TIMESTAMP_COL = "Timestamp"
 
@@ -48,7 +49,7 @@ TIMESTAMP_COL = "Timestamp"
 DROPPED_X_COLS = ["date_minutes", "attack_type", "is_attack", "has_attack_ip"]
 
 # TARGET = "Label"
-TARGET = "is_attack"
+TARGET = "has_attack_ip"
 
 # X_COLS = None
 # X_COLS = [
@@ -142,18 +143,41 @@ X_COLS = [
     "count_tcp_flags_urg",
     "count_tcp_flags_ack",
     "count_tcp_flags_fin",
+
     "median_frame_len",
     "median_frame_time_delta",
+    "median_tcp_time_relative",
+    "median_tcp_hdr_len",
+
     "entropy_frame_len",
     "entropy_frame_time_delta",
     "entropy_tcp_time_relative",
+    "entropy_tcp_hdr_len",
+
     "avg_frame_len",
     "avg_frame_time_delta",
+    "avg_tcp_hdr_len",
+    "avg_tcp_time_relative",
+
     "stddev_frame_time_delta",
     "stddev_frame_len",
+    "stddev_tcp_hdr_len",
+    "stddev_tcp_time_relative",
+
     "mode_frame_len",
     "mode_frame_time_delta",
     "mode_tcp_time_relative",
+    "mode_tcp_hdr_len",
+
+    "min_frame_time_delta",
+    "min_frame_len",
+    "min_tcp_time_relative",
+    "min_tcp_hdr_len",
+
+    "max_frame_time_delta",
+    "max_frame_len",
+    "max_tcp_time_relative",
+    "max_tcp_hdr_len",
 ]
 
 if USE_SOURCE_DATA:
@@ -212,7 +236,7 @@ else:
     else:
         logger.info("Loading data from the duckdb database...")
         # Load data
-        con = duckdb.connect(database="data/pcap_metadata.duckdb", read_only=True)
+        con = duckdb.connect(database=DUCKDB_PATH, read_only=True)
         dataset = con.execute("SELECT * FROM merged_aggregated").df()
         con.close()
         # cache data to parquet so we don't have to load it again
