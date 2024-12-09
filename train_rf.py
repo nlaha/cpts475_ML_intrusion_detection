@@ -321,7 +321,7 @@ else:
     logger.info("Training the XGBoost classifier...")
 
     def run_with_params(
-        max_depth, gamma, learning_rate, num_parallel_tree, subsample, colsample_bynode, scale_pos_weight
+        max_depth, gamma, learning_rate, num_parallel_tree, subsample, colsample_bynode
     ):
         """
         Run the XGBoost classifier with the given parameters
@@ -331,23 +331,29 @@ else:
             "gamma": gamma,
             "learning_rate": learning_rate,
             "subsample": subsample,
-            "tree_method": "auto",
+            "tree_method": "hist",
             "num_parallel_tree": int(num_parallel_tree),
             "colsample_bynode": colsample_bynode,
             "nthread": THREADS,
-            "objective": "binary:hinge",
-            "scale_pos_weight": scale_pos_weight,
+            "objective": "binary:logistic",
         }
+
+        def fpreproc(dtrain, dtest, param):
+            label = dtrain.get_label()
+            ratio = float(np.sum(label == 0)) / np.sum(label == 1)
+            # scale weight by cross-validation ratio
+            param["scale_pos_weight"] = ratio
+            return (dtrain, dtest, param)
 
         # perform cross-validation
         # i.e. traing the model on a subset of the data and testing it on the rest
         # this is done multiple times to get a more accurate estimate of the model's performance
-        cv = xgb.cv(params=params, nfold=5, metrics="error", seed=42, dtrain=D_train)
-        score_mean = cv["test-error-mean"].iloc[-1]
-        score_std = cv["test-error-std"].iloc[-1]
+        cv = xgb.cv(params=params, nfold=5, metrics="auc", seed=42, dtrain=D_train, fpreproc=fpreproc)
+        score_mean = cv["test-auc-mean"].iloc[-1]
+        score_std = cv["test-auc-std"].iloc[-1]
 
         # Print the accuracy of the classifier
-        logger.info(f"CV Error: {score_mean} (±{score_std})")
+        logger.info(f"CV metric (AUC): {score_mean} (±{score_std})")
         # Print the parameters used
         logger.info(f"Parameters: {params}")
 
@@ -361,7 +367,6 @@ else:
         "subsample": (0.5, 1),
         "num_parallel_tree": (50, 1000),
         "colsample_bynode": (0.5, 1),
-        "scale_pos_weight": (1, 50),
     }
 
     logger.info("Tuning hyperparameters...")
@@ -371,6 +376,7 @@ else:
     xgb_bo = BayesianOptimization(run_with_params, params)
 
     xgb_bo.maximize(init_points=5, n_iter=20)
+    #xgb_bo.maximize(init_points=1, n_iter=1)
 
     logger.info("Best parameters found: ", xgb_bo.max["params"])
     logger.info("Training the model with the best parameters...")
@@ -378,9 +384,10 @@ else:
     best_params = xgb_bo.max["params"]
     best_params["max_depth"] = int(best_params["max_depth"])
     best_params["num_parallel_tree"] = int(best_params["num_parallel_tree"])
-    best_params["objective"] = "binary:hinge"
+    best_params["objective"] = "binary:logistic"
     best_params["nthread"] = THREADS
-    best_params["tree_method"] = "auto"
+    best_params["tree_method"] = "hist"
+    best_params["scale_pos_weight"] = float(np.sum(Y_train == 0)) / np.sum(Y_train == 1)
 
     model_best = xgb.train(best_params, D_train, num_boost_round=10)
 
@@ -398,6 +405,9 @@ prediction = model_best.predict(predict_dmatrix)
 
 # print predictions 
 logger.info(prediction)
+
+# map prediction from probability to binary
+prediction = np.round(prediction)
 
 # get number of positive and negative predictions
 logger.info(f"Positive predictions: {np.sum(prediction)}")
