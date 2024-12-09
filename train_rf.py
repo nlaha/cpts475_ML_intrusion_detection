@@ -31,7 +31,7 @@ DATASET_SAMPLE_PERCENT = 1.0
 SAMPLING_INTERVAL = "60s"
 
 # Model name
-MODEL_NAME = f"xgboost_rf_new_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
+MODEL_NAME = f"xgboost_rf_new_more_features_{DATASET_SAMPLE_PERCENT}_data_{SAMPLING_INTERVAL}"
 
 TIMESTAMP_COL = "Timestamp"
 
@@ -142,11 +142,18 @@ X_COLS = [
     "count_tcp_flags_urg",
     "count_tcp_flags_ack",
     "count_tcp_flags_fin",
-    "avg_frame_time_delta",
-    "stddev_frame_time_delta",
+    "median_frame_len",
+    "median_frame_time_delta",
     "entropy_frame_len",
     "entropy_frame_time_delta",
     "entropy_tcp_time_relative",
+    "avg_frame_len",
+    "avg_frame_time_delta",
+    "stddev_frame_time_delta",
+    "stddev_frame_len",
+    "mode_frame_len",
+    "mode_frame_time_delta",
+    "mode_tcp_time_relative",
 ]
 
 if USE_SOURCE_DATA:
@@ -321,7 +328,7 @@ else:
     logger.info("Training the XGBoost classifier...")
 
     def run_with_params(
-        max_depth, gamma, learning_rate, num_parallel_tree, subsample, colsample_bynode
+        max_depth, gamma, learning_rate, num_parallel_tree, subsample, colsample_bynode, alpha, lambda_val
     ):
         """
         Run the XGBoost classifier with the given parameters
@@ -329,6 +336,8 @@ else:
         params = {
             "max_depth": int(max_depth),
             "gamma": gamma,
+            "alpha": alpha,
+            "lambda": lambda_val,
             "learning_rate": learning_rate,
             "subsample": subsample,
             "tree_method": "hist",
@@ -367,6 +376,8 @@ else:
         "subsample": (0.5, 1),
         "num_parallel_tree": (50, 1000),
         "colsample_bynode": (0.5, 1),
+        "alpha": (0, 1),
+        "lambda_val": (0, 1),
     }
 
     logger.info("Tuning hyperparameters...")
